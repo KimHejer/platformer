@@ -16,7 +16,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
     private Texture2D _pixel;
 
     private Player _player;
-    private List<Platform> _platforms;
+    private List<IPlatform> _platforms;
 
     public Game1()
     {
@@ -32,7 +32,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
     {
             _player = new Player(new Vector2(100, 100));
 
-            _platforms = new List<Platform>
+            _platforms = new List<IPlatform>
             {
                 new SolidPlatform(0, 850, 1600, 50),
 
@@ -58,19 +58,16 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
     protected override void Update(GameTime gameTime)
     {
-        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+        KeyboardState keyboard = Keyboard.GetState();
+
+        if (keyboard.IsKeyDown(Keys.Escape))
             Exit();
 
-            KeyboardState keyboard = Keyboard.GetState();
-
-            if (keyboard.IsKeyDown(Keys.Escape))
-                Exit();
-
-            float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+        float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
             
-            _player.Update(gameTime, keyboard);
+        _player.Update(gameTime, keyboard);
 
-            CollisionResolver.Move(_player, _platforms, deltaTime);
+        CollisionResolver.Move(_player, _platforms, deltaTime);
 
         base.Update(gameTime);
     }
@@ -81,7 +78,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
         _spriteBatch.Begin();
 
-        foreach (Platform platform in _platforms)
+        foreach (IPlatform platform in _platforms)
         {
             Color color = platform.IsOneWay
                 ? Color.LightGreen

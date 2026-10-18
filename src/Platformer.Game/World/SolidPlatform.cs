@@ -2,7 +2,7 @@ using Microsoft.Xna.Framework;
 
 namespace Platformer.Game.World;
 
-public class SolidPlatform : Platform
+public class SolidPlatform : IPlatform
 {
     public Rectangle Bounds { get; }
     public bool IsOneWay => false;

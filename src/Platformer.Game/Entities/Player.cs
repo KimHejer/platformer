@@ -2,7 +2,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
-namespace Platformer.Game.Entities;
+ namespace Platformer.Game.Entities;
 
 public class Player
 {
@@ -19,13 +19,11 @@ public class Player
 
     private const float FirstJumpHeight = 300f;
     private const float SecondJumpHeightRatio = 0.4f;
-    private const float JumpCutMultiplier = 0.45f;
     private const int MaxJumps = 2;
     private int _jumpsUsed = 0;
     private bool _wasJumpHeld = false;
 
-    private float _dropThrougTimer = 0f;
-    public bool IgnoreOneWayPlatforms => _dropThrougTimer > 0f;
+    public bool WantsToDrop { get; private set; }
     public bool IsGrounded { get; private set; }
 
     public Rectangle Hitbox => new Rectangle(
@@ -47,8 +45,6 @@ public class Player
 
         float horizontalInput = 0f;
 
-        _dropThrougTimer = MathF.Max(0f, _dropThrougTimer - deltaTime);
-
         if (keyboard.IsKeyDown(Keys.A))
             horizontalInput -= 1f;
 
@@ -60,21 +56,16 @@ public class Player
             Velocity.Y
         );
 
+        WantsToDrop = keyboard.IsKeyDown(Keys.S);
+
         bool jumpHeld = keyboard.IsKeyDown(Keys.W);
-
         bool jumpPressed = jumpHeld && !_wasJumpHeld;
-        bool jumpReleased = !jumpHeld && _wasJumpHeld;
 
-        bool dropPressed = keyboard.IsKeyDown(Keys.S) && jumpPressed;
-
-        if (dropPressed && IsGrounded)
-        {
-            _dropThrougTimer = 0.2f;
-            IsGrounded = false;
-            _jumpsUsed = 1;
-            Velocity = new Vector2(Velocity.X, 100f);
-        }
-        else if (jumpPressed && _jumpsUsed < MaxJumps)
+        if (
+            jumpPressed && 
+            !WantsToDrop &&
+            _jumpsUsed < MaxJumps
+        )
         {
             Jump();
         }
@@ -125,7 +116,7 @@ public class Player
         Velocity = velocity;
     }
 
-    public void SetgGrounded(bool grounded)
+    public void SetGrounded(bool grounded)
     {
         IsGrounded = grounded;
 

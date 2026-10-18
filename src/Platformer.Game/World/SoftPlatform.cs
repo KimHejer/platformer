@@ -1,9 +1,8 @@
-using System.Dynamic;
 using Microsoft.Xna.Framework;
 
 namespace Platformer.Game.World;
 
-public class SoftPlatform : Platform
+public class SoftPlatform : IPlatform
 {
     public Rectangle Bounds { get; }
     public bool IsOneWay => true;

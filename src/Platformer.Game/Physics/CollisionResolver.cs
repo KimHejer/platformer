@@ -12,7 +12,7 @@ public static class CollisionResolver
 {
     public static void Move(
         Player player,
-        IReadOnlyList<Platform> platforms,
+        IReadOnlyList<IPlatform> platforms,
         float deltaTime)
     {
         Vector2 position = player.Position;
@@ -22,18 +22,18 @@ public static class CollisionResolver
 
         float moveX = velocity.X * deltaTime;
 
-        foreach (Platform platform in platforms)
+        foreach (IPlatform platform in platforms)
         {
-            if (platform.IsOneWay && player.IgnoreOneWayPlatforms)
+            if (platform.IsOneWay)
                 continue;
 
             Rectangle bounds = platform.Bounds;
 
-            bool vericalOverlap = 
+            bool verticalOverlap = 
                 position.Y < bounds.Bottom &&
                 position.Y + Player.Height > bounds.Top;
 
-            if (!vericalOverlap)
+            if (!verticalOverlap)
                 continue;
 
             if (moveX > 0)
@@ -63,8 +63,11 @@ public static class CollisionResolver
 
         float moveY = velocity.Y * deltaTime;
 
-        foreach (Platform platform in platforms)
+        foreach (IPlatform platform in platforms)
         {
+            if (platform.IsOneWay && player.WantsToDrop)
+                continue;
+
             Rectangle bounds = platform.Bounds;
 
             bool horizontalOverlap = 
@@ -81,7 +84,6 @@ public static class CollisionResolver
                 if (playerBottom <= bounds.Top && playerBottom + moveY >= bounds.Top)
                 {
                     moveY = Math.Min(moveY, bounds.Top - playerBottom);
-                    grounded = true;
                 }
             }
             else if (moveY < 0f && !platform.IsOneWay)
@@ -105,6 +107,6 @@ public static class CollisionResolver
 
         player.SetPosition(position);
         player.SetVelocity(velocity);
-        player.SetgGrounded(grounded);
+        player.SetGrounded(grounded);
     }
 }
