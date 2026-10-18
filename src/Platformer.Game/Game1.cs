@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -6,6 +7,8 @@ using Microsoft.Xna.Framework.Input;
 using Platformer.Game.Entities;
 using Platformer.Game.World;
 using Platformer.Game.Physics;
+using Platformer.Game.Graphics;
+using System;
 
 namespace Platformer.Game;
 
@@ -17,6 +20,9 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
     private Player _player;
     private List<IPlatform> _platforms;
+
+    private SpriteAnimator _kixAnimator;
+    private bool _facingRight = true;
 
     public Game1()
     {
@@ -54,6 +60,18 @@ public class Game1 : Microsoft.Xna.Framework.Game
         _pixel = new Texture2D(GraphicsDevice, 1, 1);
         _pixel.SetData(new[] { Color.White });
 
+        _kixAnimator = new SpriteAnimator();
+
+        _kixAnimator.AddAnimation("Idle", LoadFrames("Idle", "idle"));
+        _kixAnimator.AddAnimation("Run", LoadFrames("Run", "run"));
+        _kixAnimator.AddAnimation("RunShoot", LoadFrames("Run_Shoot", "run_shoot"));
+        _kixAnimator.AddAnimation("Jump", LoadFrames("Jump", "jump"));
+        _kixAnimator.AddAnimation("Fall", LoadFrames("Fall", "fall"));
+        _kixAnimator.AddAnimation("Land", LoadFrames("Land", "land"));
+        _kixAnimator.AddAnimation("Shoot", LoadFrames("Shoot", "shoot"));
+
+        _kixAnimator.Play("Idle");
+
     }
 
     protected override void Update(GameTime gameTime)
@@ -69,6 +87,31 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
         CollisionResolver.Move(_player, _platforms, deltaTime);
 
+        bool shooting = keyboard.IsKeyDown(Keys.Space);
+
+        if (_player.Velocity.X > 0f)
+            _facingRight = true;
+        else if (_player.Velocity.X < 0f)
+            _facingRight = false;
+
+        if (!_player.IsGrounded)
+        {
+            if (_player.Velocity.Y < 0)
+                _kixAnimator.Play("Jump");
+            else
+                _kixAnimator.Play("Fall");
+        }
+        else if (MathF.Abs(_player.Velocity.X) > 0.1f)
+        {
+            _kixAnimator.Play(shooting ? "RunShoot" : "Run");
+        }
+        else
+        {
+            _kixAnimator.Play(shooting ? "Shoot" : "Idle");
+        }
+
+        _kixAnimator.Update(gameTime);
+
         base.Update(gameTime);
     }
 
@@ -76,7 +119,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
-        _spriteBatch.Begin();
+        _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
 
         foreach (IPlatform platform in _platforms)
         {
@@ -91,14 +134,71 @@ public class Game1 : Microsoft.Xna.Framework.Game
             );
         }
 
+        Texture2D frame = _kixAnimator.CurrentFrame;
+
+        const int spriteWidth = 192;
+        const int spriteHeight = 96;
+
+        const int bodyAnchorX = 62;
+
+        int playerCenterX = (int)_player.Position.X + Player.Width / 2;
+
+        int spriteX = _facingRight
+            ? playerCenterX - bodyAnchorX
+            : playerCenterX - (spriteWidth - bodyAnchorX);
+
+        Rectangle destination = new Rectangle(
+            spriteX,
+            (int)_player.Position.Y + Player.Height - 90,
+            spriteWidth,
+            spriteHeight
+        );
+
+        SpriteEffects effects = _facingRight
+            ? SpriteEffects.None
+            : SpriteEffects.FlipHorizontally;
+
+        _spriteBatch.Draw(
+            frame,
+            destination,
+            null,
+            Color.White,
+            0f,
+            Vector2.Zero,
+            effects,
+            0f
+        );
+
         _spriteBatch.Draw(
             _pixel,
             _player.Hitbox,
-            Color.Red
+            Color.Red * 0.35f
         );
 
         _spriteBatch.End();
 
         base.Draw(gameTime);
+    }
+
+    private Texture2D[] LoadFrames(string folder, string prefix)
+    {
+        Texture2D[] frames = new Texture2D[4];
+
+        for (int i = 0; i < 4; i++)
+        {
+            string path = Path.Combine(
+                "Content",
+                "Sprites",
+                "Kix",
+                folder,
+                $"{prefix}_{i + 1:00}.png"
+            );
+
+            using var stream = TitleContainer.OpenStream(path);
+
+            frames[i] = Texture2D.FromStream(GraphicsDevice, stream);
+        }
+
+        return frames;
     }
 }
