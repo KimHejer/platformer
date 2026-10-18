@@ -1,6 +1,11 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+
+using Platformer.Game.Entities;
+using Platformer.Game.World;
+using Platformer.Game.Physics;
 
 namespace Platformer.Game;
 
@@ -8,6 +13,10 @@ public class Game1 : Microsoft.Xna.Framework.Game
 {
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
+    private Texture2D _pixel;
+
+    private Player _player;
+    private List<Platform> _platforms;
 
     public Game1()
     {
@@ -18,7 +27,14 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
     protected override void Initialize()
     {
-        // TODO: Add your initialization logic here
+            _player = new Player(new Vector2(100, 100));
+
+            _platforms = new List<Platform>
+            {
+                new Platform(0, 400, 800, 50),
+                new Platform(200, 300, 150, 20),
+                new Platform(450, 230, 150, 20)
+            };
 
         base.Initialize();
     }
@@ -27,7 +43,9 @@ public class Game1 : Microsoft.Xna.Framework.Game
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-        // TODO: use this.Content to load your game content here
+        _pixel = new Texture2D(GraphicsDevice, 1, 1);
+        _pixel.SetData(new[] { Color.White });
+
     }
 
     protected override void Update(GameTime gameTime)
@@ -35,7 +53,16 @@ public class Game1 : Microsoft.Xna.Framework.Game
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
 
-        // TODO: Add your update logic here
+            KeyboardState keyboard = Keyboard.GetState();
+
+            if (keyboard.IsKeyDown(Keys.Escape))
+                Exit();
+
+            float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            
+            _player.Update(gameTime, keyboard);
+
+            COllisionResolver.Move(_player, _platforms, deltaTime);
 
         base.Update(gameTime);
     }
@@ -44,7 +71,24 @@ public class Game1 : Microsoft.Xna.Framework.Game
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
-        // TODO: Add your drawing code here
+        _spriteBatch.Begin();
+
+        foreach (Platform platform in _platforms)
+        {
+            _spriteBatch.Draw(
+                _pixel,
+                platform.Bounds,
+                Color.DarkGray
+            );
+        }
+
+        _spriteBatch.Draw(
+            _pixel,
+            _player.Hitbox,
+            Color.Red
+        );
+
+        _spriteBatch.End();
 
         base.Draw(gameTime);
     }
