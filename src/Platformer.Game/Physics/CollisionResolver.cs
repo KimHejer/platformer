@@ -8,7 +8,7 @@ using Platformer.Game.World;
 
 namespace Platformer.Game.Physics;
 
-public static class COllisionResolver
+public static class CollisionResolver
 {
     public static void Move(
         Player player,
@@ -24,6 +24,9 @@ public static class COllisionResolver
 
         foreach (Platform platform in platforms)
         {
+            if (platform.IsOneWay && player.IgnoreOneWayPlatforms)
+                continue;
+
             Rectangle bounds = platform.Bounds;
 
             bool vericalOverlap = 
@@ -33,11 +36,23 @@ public static class COllisionResolver
             if (!vericalOverlap)
                 continue;
 
-            if (moveX > 0 && position.X + Player.Width <= bounds.Left)
+            if (moveX > 0)
             {
-                float distance = bounds.Left - (position.X + Player.Width);
+                float playerRight = position.X + Player.Width;
 
-                moveX = Math.Min(moveX, distance);
+                if (playerRight <= bounds.Left && playerRight + moveX >= bounds.Left)
+                {
+                    moveX = Math.Min(moveX, bounds.Left - playerRight);
+                }
+            }
+            else if (moveX < 0f)
+            {
+                float playerLeft = position.X;
+
+                if (playerLeft >= bounds.Right && playerLeft + moveX <= bounds.Right)
+                {
+                    moveX = Math.Max(moveX, bounds.Right - playerLeft);
+                }
             }
         }
 
@@ -59,30 +74,37 @@ public static class COllisionResolver
             if (!horizontalOverlap)
                 continue;
             
-            if (moveY > 0 && position.Y + Player.Height <= bounds.Top)
+            if (moveY > 0)
             {
-                float distance = bounds.Top - (position.Y + Player.Height);
+                float playerBottom = position.Y + Player.Height;
 
-                moveY = Math.Min(moveY, distance);
+                if (playerBottom <= bounds.Top && playerBottom + moveY >= bounds.Top)
+                {
+                    moveY = Math.Min(moveY, bounds.Top - playerBottom);
+                    grounded = true;
+                }
             }
-            else if (moveY < 0 && position.Y >= bounds.Bottom)
+            else if (moveY < 0f && !platform.IsOneWay)
             {
-                float distance = bounds.Bottom - position.Y;
+                float playerTop = position.Y;
 
-                moveY = Math.Max(moveY, distance);
+                if (playerTop >= bounds.Bottom && playerTop + moveY <= bounds.Bottom)
+                {
+                    moveY = Math.Max(moveY, bounds.Bottom - playerTop);
+                }
             }
-
-            if (moveY != velocity.Y * deltaTime)
-            {
-                grounded = velocity.Y > 0;
-                velocity.Y = 0;
-            }
-
-            position.Y += moveY;
-
-            player.SetPosition(position);
-            player.SetVelocity(velocity);
-            player.SetgGrounded(grounded);
         }
+
+        if (moveY != velocity.Y * deltaTime)
+        {
+            grounded = velocity.Y > 0;
+            velocity.Y = 0;
+        }
+
+        position.Y += moveY;
+
+        player.SetPosition(position);
+        player.SetVelocity(velocity);
+        player.SetgGrounded(grounded);
     }
 }

@@ -21,6 +21,9 @@ public class Game1 : Microsoft.Xna.Framework.Game
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
+        _graphics.PreferredBackBufferWidth = 1600;
+        _graphics.PreferredBackBufferHeight = 900;
+
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
     }
@@ -31,9 +34,14 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
             _platforms = new List<Platform>
             {
-                new Platform(0, 400, 800, 50),
-                new Platform(200, 300, 150, 20),
-                new Platform(450, 230, 150, 20)
+                new SolidPlatform(0, 850, 1600, 50),
+
+                new SolidPlatform(150, 650, 250, 30),
+                new SolidPlatform(700, 450, 250, 30),
+
+                new SoftPlatform(450, 700, 200, 16),
+                new SoftPlatform(1050, 550, 200, 16),
+                new SoftPlatform(1150, 300, 200, 16)
             };
 
         base.Initialize();
@@ -62,7 +70,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
             
             _player.Update(gameTime, keyboard);
 
-            COllisionResolver.Move(_player, _platforms, deltaTime);
+            CollisionResolver.Move(_player, _platforms, deltaTime);
 
         base.Update(gameTime);
     }
@@ -75,10 +83,14 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
         foreach (Platform platform in _platforms)
         {
+            Color color = platform.IsOneWay
+                ? Color.LightGreen
+                : Color.DarkGray;
+
             _spriteBatch.Draw(
                 _pixel,
                 platform.Bounds,
-                Color.DarkGray
+                color
             );
         }
 
