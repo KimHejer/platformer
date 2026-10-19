@@ -9,6 +9,9 @@ using Platformer.Game.World;
 using Platformer.Game.Physics;
 using Platformer.Game.Graphics;
 using Platformer.Game.Hazards;
+using Platformer.Game.Combat;
+using Platformer.Game.Combat.Weapons;
+using Platformer.Game.Combat.Projectiles;
 using System;
 
 namespace Platformer.Game;
@@ -31,6 +34,9 @@ public class Game1 : Microsoft.Xna.Framework.Game
     private Vector2 _respawnPosition = new(100, 100);
     private float _deathTimer = 0f;
 
+    private Rifle _rifle;
+    private ProjectileManager _projectileManager;
+
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
@@ -44,6 +50,9 @@ public class Game1 : Microsoft.Xna.Framework.Game
     protected override void Initialize()
     {
             _player = new Player(new Vector2(100, 100));
+
+            _rifle = new Rifle();
+            _projectileManager = new ProjectileManager();
 
             _platforms = new List<IPlatform>
             {
@@ -162,6 +171,29 @@ public class Game1 : Microsoft.Xna.Framework.Game
             }
         }
 
+        _rifle.Update(gameTime);
+
+        Vector2 direction = _facingRight ? Vector2.UnitX : -Vector2.UnitX;
+
+
+        if (shooting && !_player.IsDead)
+        {
+            Vector2 bulletOrigin = new(
+                _player.Position.X + Player.Width / 2,
+                _player.Position.Y + Player.Height / 2
+            );
+
+            Projectile? bullet = _rifle.TryFire(
+                bulletOrigin,
+                direction
+            );
+
+            if (bullet != null)
+                _projectileManager.Add(bullet);
+        }
+
+        _projectileManager.Update(gameTime, _platforms, _spikes);
+
         base.Update(gameTime);
     }
 
@@ -192,6 +224,8 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
             _spriteBatch.Draw(_spikeTexture, new Rectangle((int)left, (int)top, 32, 32), Color.White);
         }
+
+        _projectileManager.Draw(_spriteBatch, _pixel);
 
         Texture2D frame = _kixAnimator.CurrentFrame;
 

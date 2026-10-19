@@ -31,7 +31,7 @@ public class Health
         if (amount <= 0 || IsDead)
             return;
         
-        Current = Math.Max(Max, Current + amount);
+        Current = Math.Min(Max, Current + amount);
     }
 
     public void Kill()
