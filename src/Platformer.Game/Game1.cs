@@ -8,6 +8,7 @@ using Platformer.Game.Entities;
 using Platformer.Game.World;
 using Platformer.Game.Physics;
 using Platformer.Game.Graphics;
+using Platformer.Game.Hazards;
 using System;
 
 namespace Platformer.Game;
@@ -17,12 +18,18 @@ public class Game1 : Microsoft.Xna.Framework.Game
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
     private Texture2D _pixel;
+    private Texture2D _spikeTexture;
 
     private Player _player;
     private List<IPlatform> _platforms;
 
     private SpriteAnimator _kixAnimator;
     private bool _facingRight = true;
+
+    private List<Spike> _spikes;
+
+    private Vector2 _respawnPosition = new(100, 100);
+    private float _deathTimer = 0f;
 
     public Game1()
     {
@@ -50,6 +57,21 @@ public class Game1 : Microsoft.Xna.Framework.Game
                 new SoftPlatform(1150, 300, 200, 16)
             };
 
+            _spikes = new List<Spike>
+            {
+                new Spike(
+                    new Vector2(400, 850),
+                    new Vector2(416, 818),
+                    new Vector2(432, 850)
+                ),
+
+                new Spike(
+                    new Vector2(432, 850),
+                    new Vector2(448, 818),
+                    new Vector2(464, 850)
+                )
+            };
+
         base.Initialize();
     }
 
@@ -59,6 +81,8 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
         _pixel = new Texture2D(GraphicsDevice, 1, 1);
         _pixel.SetData(new[] { Color.White });
+
+        _spikeTexture = CreateSpikeTexture(32, 32);
 
         _kixAnimator = new SpriteAnimator();
 
@@ -81,7 +105,24 @@ public class Game1 : Microsoft.Xna.Framework.Game
         if (keyboard.IsKeyDown(Keys.Escape))
             Exit();
 
+        if (keyboard.IsKeyDown(Keys.R))
+            _player.Respawn(_respawnPosition);
+
         float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+        if (_player.IsDead)
+        {
+            _deathTimer += deltaTime;
+
+            if (_deathTimer >= 0.4f)
+            {
+                _player.Respawn(_respawnPosition);
+                _deathTimer = 0f;
+            }
+
+            base.Update(gameTime);
+            return;
+        }
             
         _player.Update(gameTime, keyboard);
 
@@ -112,6 +153,15 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
         _kixAnimator.Update(gameTime);
 
+        foreach (Spike spike in _spikes)
+        {
+            if (spike.Touches(_player.Hitbox))
+            {
+                _player.Kill();
+                break;
+            }
+        }
+
         base.Update(gameTime);
     }
 
@@ -134,18 +184,29 @@ public class Game1 : Microsoft.Xna.Framework.Game
             );
         }
 
+        foreach(Spike spike in _spikes)
+        {
+            float left = MathF.Min( spike.Shape.A.X, MathF.Min(spike.Shape.B.X, spike.Shape.C.X));
+
+            float top = MathF.Min(spike.Shape.A.Y, MathF.Min(spike.Shape.B.Y, spike.Shape.C.Y));
+
+            _spriteBatch.Draw(_spikeTexture, new Rectangle((int)left, (int)top, 32, 32), Color.White);
+        }
+
         Texture2D frame = _kixAnimator.CurrentFrame;
 
         const int spriteWidth = 192;
         const int spriteHeight = 96;
 
         const int bodyAnchorX = 62;
+        const int leftOffset = 7;
+        const int rightOffset = -12;
 
-        int playerCenterX = (int)_player.Position.X + Player.Width / 2;
+        int playerCenterX = (int)_player.Position.X + Player.Width / 2 + leftOffset;
 
         int spriteX = _facingRight
             ? playerCenterX - bodyAnchorX
-            : playerCenterX - (spriteWidth - bodyAnchorX);
+            : playerCenterX - (spriteWidth - bodyAnchorX) + rightOffset;
 
         Rectangle destination = new Rectangle(
             spriteX,
@@ -169,6 +230,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
             0f
         );
 
+        // Only for testing, shows the player hitbox
         _spriteBatch.Draw(
             _pixel,
             _player.Hitbox,
@@ -200,5 +262,29 @@ public class Game1 : Microsoft.Xna.Framework.Game
         }
 
         return frames;
+    }
+
+    private Texture2D CreateSpikeTexture(int width, int height)
+    {
+        Texture2D texture = new Texture2D(GraphicsDevice, width, height);
+
+        Color[] pixels = new Color[width * height];
+
+        for (int y = 0; y < height; y++)
+        {
+            float halfWidt = (y + 0.5f) / height * (width / 2f);
+            float centerX = width / 2f;
+
+            for (int x = 0; x < width; x++)
+            {
+                bool inside = MathF.Abs(x + 0.5f - centerX) <= halfWidt;
+
+                pixels[y * width + x] = inside ? Color.Black : Color.Transparent;
+            }
+        }
+
+        texture.SetData(pixels);
+
+        return texture;
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
@@ -9,8 +10,8 @@ public class Player
     public Vector2 Position { get; private set; }
     public Vector2 Velocity { get; private set; }
 
-    public const int Width = 32;
-    public const int Height = 32;
+    public const int Width = 35;
+    public const int Height = 60;
 
     private const float MoveSpeed = 200f;
     private const float Gravity = 1200f;
@@ -25,6 +26,11 @@ public class Player
 
     public bool WantsToDrop { get; private set; }
     public bool IsGrounded { get; private set; }
+
+    public Health Health { get; } = new Health(100);
+    public bool IsDead => Health.IsDead;
+    private float _invulnerabilityTimer = 0f;
+    private const float InvulnerabilityDuration = 0.75f;
 
     public Rectangle Hitbox => new Rectangle(
         (int)Position.X,
@@ -42,6 +48,11 @@ public class Player
     public void Update(GameTime gameTime, KeyboardState keyboard)
     {
         float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+        _invulnerabilityTimer = MathF.Max(0f, _invulnerabilityTimer - deltaTime);
+
+        if (IsDead)
+            return;
 
         float horizontalInput = 0f;
 
@@ -128,5 +139,37 @@ public class Player
         {
             _jumpsUsed = 1;
         }
+    }
+
+    public void TakeDamage(int amount)
+    {
+        if (IsDead || _invulnerabilityTimer > 0f)
+            return;
+        
+        Health.TakeDamage(amount);
+
+        if (!IsDead)
+            _invulnerabilityTimer = InvulnerabilityDuration;
+    }
+
+    public void Kill()
+    {
+        if (IsDead)
+            return;
+        
+        Health.Kill();
+    }
+
+    public void Respawn(Vector2 position)
+    {
+        Position = position;
+        Velocity = Vector2.Zero;
+
+        Health.Reset();
+
+        IsGrounded = false;
+        _jumpsUsed = 1;
+        _wasJumpHeld = false;
+        _invulnerabilityTimer = 0f;
     }
 }
