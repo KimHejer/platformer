@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Platformer.Game.Combat.Projectiles;
 using Platformer.Game.World;
 using Platformer.Game.Hazards;
+using Platformer.Game.Entities.Enemies;
 
 namespace Platformer.Game.Combat;
 
@@ -19,7 +20,9 @@ public class ProjectileManager
     public void Update(
         GameTime gameTime,
         IReadOnlyList<IPlatform> platforms,
-        IReadOnlyList<Spike> spikes)
+        IReadOnlyList<Spike> spikes,
+        IReadOnlyList<Enemy> enemies
+    )
     {
         foreach (Projectile projectile in _projectiles)
         {
@@ -44,6 +47,22 @@ public class ProjectileManager
             {
                 if (spike.Touches(projectile.Hitbox))
                 {
+                    projectile.OnCollision();
+                    break;
+                }
+            }
+
+            if (!projectile.IsActive)
+                continue;
+            
+            foreach (Enemy enemy in enemies)
+            {
+                if (enemy.IsDead)
+                    continue;
+
+                if (projectile.Hitbox.Intersects(enemy.Hitbox)) 
+                {
+                    enemy.TakeDamage(projectile.Damage);
                     projectile.OnCollision();
                     break;
                 }

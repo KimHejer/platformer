@@ -197,7 +197,11 @@ public class Game1 : Microsoft.Xna.Framework.Game
                 _projectileManager.Add(bullet);
         }
 
-        _projectileManager.Update(gameTime, _level.Platforms, _level.Spikes);
+        _projectileManager.Update(
+            gameTime, 
+            _level.Platforms, 
+            _level.Spikes, 
+            _level.Enemies);
 
         base.Update(gameTime);
     }
@@ -239,6 +243,14 @@ public class Game1 : Microsoft.Xna.Framework.Game
                 _pixel,
                 enemy.Hitbox,
                 Color.IndianRed
+            );
+
+            HealthBarRenderer.Draw(
+                _spriteBatch,
+                _pixel,
+                enemy.Hitbox,
+                enemy.Health.Current,
+                enemy.Health.Max
             );
         }
 
@@ -287,6 +299,17 @@ public class Game1 : Microsoft.Xna.Framework.Game
             _player.Hitbox,
             Color.Red * 0.35f
         );
+
+        if (!_player.IsDead)
+        {
+            HealthBarRenderer.Draw(
+                _spriteBatch,
+                _pixel,
+                _player.Hitbox,
+                _player.Health.Current,
+                _player.Health.Max
+            );
+        }
 
         _spriteBatch.End();
 
