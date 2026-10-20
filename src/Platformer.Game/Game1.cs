@@ -24,12 +24,10 @@ public class Game1 : Microsoft.Xna.Framework.Game
     private Texture2D _spikeTexture;
 
     private Player _player;
-    private List<IPlatform> _platforms;
+    private Level _level;
 
     private SpriteAnimator _kixAnimator;
     private bool _facingRight = true;
-
-    private List<Spike> _spikes;
 
     private Vector2 _respawnPosition = new(100, 100);
     private float _deathTimer = 0f;
@@ -49,37 +47,20 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
     protected override void Initialize()
     {
-            _player = new Player(new Vector2(100, 100));
+        _level = LevelLoader.Load(
+            Path.Combine(
+                AppContext.BaseDirectory,
+                "Content",
+                "Levels",
+                "level_00.json"
+            )
+        );
 
-            _rifle = new Rifle();
-            _projectileManager = new ProjectileManager();
+        _player = new Player(_level.SpawnPosition);
+        _respawnPosition = _level.SpawnPosition;
 
-            _platforms = new List<IPlatform>
-            {
-                new SolidPlatform(0, 850, 1600, 50),
-
-                new SolidPlatform(150, 650, 250, 30),
-                new SolidPlatform(700, 450, 250, 30),
-
-                new SoftPlatform(450, 700, 200, 16),
-                new SoftPlatform(1050, 550, 200, 16),
-                new SoftPlatform(1150, 300, 200, 16)
-            };
-
-            _spikes = new List<Spike>
-            {
-                new Spike(
-                    new Vector2(400, 850),
-                    new Vector2(416, 818),
-                    new Vector2(432, 850)
-                ),
-
-                new Spike(
-                    new Vector2(432, 850),
-                    new Vector2(448, 818),
-                    new Vector2(464, 850)
-                )
-            };
+        _rifle = new Rifle();
+        _projectileManager = new ProjectileManager();
 
         base.Initialize();
     }
@@ -135,7 +116,12 @@ public class Game1 : Microsoft.Xna.Framework.Game
             
         _player.Update(gameTime, keyboard);
 
-        CollisionResolver.Move(_player, _platforms, deltaTime);
+        CollisionResolver.Move(_player, _level.Platforms, deltaTime);
+
+        if (_player.Position.Y > _level.Height)
+        {
+            _player.Kill();
+        }
 
         bool shooting = keyboard.IsKeyDown(Keys.Space);
 
@@ -162,7 +148,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
         _kixAnimator.Update(gameTime);
 
-        foreach (Spike spike in _spikes)
+        foreach (Spike spike in _level.Spikes)
         {
             if (spike.Touches(_player.Hitbox))
             {
@@ -192,7 +178,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
                 _projectileManager.Add(bullet);
         }
 
-        _projectileManager.Update(gameTime, _platforms, _spikes);
+        _projectileManager.Update(gameTime, _level.Platforms, _level.Spikes);
 
         base.Update(gameTime);
     }
@@ -203,7 +189,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
         _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
 
-        foreach (IPlatform platform in _platforms)
+        foreach (IPlatform platform in _level.Platforms)
         {
             Color color = platform.IsOneWay
                 ? Color.LightGreen
@@ -216,7 +202,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
             );
         }
 
-        foreach(Spike spike in _spikes)
+        foreach(Spike spike in _level.Spikes)
         {
             float left = MathF.Min( spike.Shape.A.X, MathF.Min(spike.Shape.B.X, spike.Shape.C.X));
 
