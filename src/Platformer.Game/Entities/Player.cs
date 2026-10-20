@@ -168,6 +168,8 @@ public class Player
         Health.Reset();
 
         IsGrounded = false;
+        WantsToDrop = false;
+
         _jumpsUsed = 1;
         _wasJumpHeld = false;
         _invulnerabilityTimer = 0f;

@@ -27,6 +27,11 @@ public abstract class Weapon
         _cooldown = MathF.Max(0f, _cooldown - deltaTime);
     }
 
+    public void Reset()
+    {
+        _cooldown = 0f;
+    }
+
     public Projectile? TryFire(Vector2 origin, Vector2 direction)
     {
         if (_cooldown > 0f)

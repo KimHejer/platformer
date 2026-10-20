@@ -57,6 +57,16 @@
       "height": 32,
       "direction": "up",
       "count": 42
+    },
+    {
+      "type": "enemy",
+      "enemyType": "stationary",
+      "x": 340,
+      "y": 642,
+      "width": 40,
+      "height": 58,
+      "health": 60,
+      "damage": 20
     }
   ]
 }

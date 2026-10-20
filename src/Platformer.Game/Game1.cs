@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
@@ -12,7 +10,7 @@ using Platformer.Game.Hazards;
 using Platformer.Game.Combat;
 using Platformer.Game.Combat.Weapons;
 using Platformer.Game.Combat.Projectiles;
-using System;
+using Platformer.Game.Entities.Enemies;
 
 namespace Platformer.Game;
 
@@ -30,7 +28,10 @@ public class Game1 : Microsoft.Xna.Framework.Game
     private bool _facingRight = true;
 
     private Vector2 _respawnPosition = new(100, 100);
+    private float RespawnDelay = 0.4f;
     private float _deathTimer = 0f;
+
+    private KeyboardState _previousKeyboard;
 
     private Rifle _rifle;
     private ProjectileManager _projectileManager;
@@ -92,11 +93,22 @@ public class Game1 : Microsoft.Xna.Framework.Game
     {
         KeyboardState keyboard = Keyboard.GetState();
 
-        if (keyboard.IsKeyDown(Keys.Escape))
+        if (keyboard.IsKeyDown(Keys.Escape)) 
+        {
             Exit();
+            return;
+        }
 
-        if (keyboard.IsKeyDown(Keys.R))
-            _player.Respawn(_respawnPosition);
+        bool restartPressed = keyboard.IsKeyDown(Keys.R) && !_previousKeyboard.IsKeyDown(Keys.R);
+
+        _previousKeyboard = keyboard;
+
+        if (restartPressed)
+        {
+            Respawn();
+            base.Update(gameTime);
+            return;
+        }
 
         float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
@@ -104,10 +116,9 @@ public class Game1 : Microsoft.Xna.Framework.Game
         {
             _deathTimer += deltaTime;
 
-            if (_deathTimer >= 0.4f)
+            if (_deathTimer >= RespawnDelay)
             {
-                _player.Respawn(_respawnPosition);
-                _deathTimer = 0f;
+                Respawn();
             }
 
             base.Update(gameTime);
@@ -121,6 +132,8 @@ public class Game1 : Microsoft.Xna.Framework.Game
         if (_player.Position.Y > _level.Height)
         {
             _player.Kill();
+            base.Update(gameTime);
+            return;
         }
 
         bool shooting = keyboard.IsKeyDown(Keys.Space);
@@ -155,6 +168,12 @@ public class Game1 : Microsoft.Xna.Framework.Game
                 _player.Kill();
                 break;
             }
+        }
+
+        if (_player.IsDead)
+        {
+            base.Update(gameTime);
+            return;
         }
 
         _rifle.Update(gameTime);
@@ -211,6 +230,18 @@ public class Game1 : Microsoft.Xna.Framework.Game
             _spriteBatch.Draw(_spikeTexture, new Rectangle((int)left, (int)top, 32, 32), Color.White);
         }
 
+        foreach (Enemy enemy in _level.Enemies)
+        {
+            if (enemy.IsDead)
+                continue;
+            
+            _spriteBatch.Draw(
+                _pixel,
+                enemy.Hitbox,
+                Color.IndianRed
+            );
+        }
+
         _projectileManager.Draw(_spriteBatch, _pixel);
 
         Texture2D frame = _kixAnimator.CurrentFrame;
@@ -260,6 +291,19 @@ public class Game1 : Microsoft.Xna.Framework.Game
         _spriteBatch.End();
 
         base.Draw(gameTime);
+    }
+
+    private void Respawn()
+    {
+        _player.Respawn(_respawnPosition);
+
+        _projectileManager.Clear();
+        _rifle.Reset();
+
+        _deathTimer = 0f;
+        _facingRight = true;
+
+        _kixAnimator.Play("Idle");
     }
 
     private Texture2D[] LoadFrames(string folder, string prefix)

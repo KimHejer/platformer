@@ -32,4 +32,8 @@ public class LevelObjectData
 
     public string Direction { get; set; } = "up";
     public int Count { get; set; } = 1;
+
+    public string EnemyType { get; set; } = "";
+    public int Health { get; set; } = 100;
+    public int Damage { get; set; } = 20;
 }

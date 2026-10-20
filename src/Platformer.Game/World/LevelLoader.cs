@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 using Microsoft.Xna.Framework;
+using Platformer.Game.Entities.Enemies;
 using Platformer.Game.Hazards;
 
 namespace Platformer.Game.World;
@@ -59,6 +60,28 @@ public static class LevelLoader
 
                 case "spike":
                     AddSpikes(level, obj);
+                    break;
+
+                case "enemy":
+                    switch (obj.EnemyType)
+                    {
+                        case "stationary":
+                            level.Enemies.Add(
+                                new StationaryEnemy(
+                                    new Vector2(obj.X, obj.Y),
+                                    obj.Width,
+                                    obj.Height,
+                                    obj.Health,
+                                    obj.Damage
+                                )
+                            );
+                            break;
+
+                        default:
+                            throw new InvalidDataException(
+                                $"Unknown enemy type: {obj.EnemyType}"
+                            );
+                    }
                     break;
                 
                 default:
