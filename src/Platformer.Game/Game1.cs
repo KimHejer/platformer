@@ -23,6 +23,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
     private Player _player;
     private Level _level;
+    private Camera2D _camera;
 
     private SpriteAnimator _kixAnimator;
     private bool _facingRight = true;
@@ -59,6 +60,11 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
         _player = new Player(_level.SpawnPosition);
         _respawnPosition = _level.SpawnPosition;
+
+        _camera = new Camera2D(
+            GraphicsDevice.Viewport.Width,
+            GraphicsDevice.Viewport.Height
+        );
 
         _rifle = new Rifle();
         _projectileManager = new ProjectileManager();
@@ -203,6 +209,25 @@ public class Game1 : Microsoft.Xna.Framework.Game
             _level.Spikes, 
             _level.Enemies);
 
+        foreach(Enemy enemy in _level.Enemies)
+        {
+            enemy.Update(gameTime);
+
+            if (enemy.IsDead)
+                continue;
+            
+            if (enemy.Hitbox.Intersects(_player.Hitbox))
+            {
+                _player.TakeDamage(enemy.ContactDamage);
+            }
+        }
+
+        _camera.Update(
+            _player.Hitbox,
+            _level.Width,
+            _level.Height
+        );
+
         base.Update(gameTime);
     }
 
@@ -210,7 +235,9 @@ public class Game1 : Microsoft.Xna.Framework.Game
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
-        _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
+        _spriteBatch.Begin(
+            samplerState: SamplerState.PointClamp,
+            transformMatrix: _camera.Transform);
 
         foreach (IPlatform platform in _level.Platforms)
         {
@@ -327,6 +354,8 @@ public class Game1 : Microsoft.Xna.Framework.Game
         _facingRight = true;
 
         _kixAnimator.Play("Idle");
+
+        _camera.Reset();
     }
 
     private Texture2D[] LoadFrames(string folder, string prefix)

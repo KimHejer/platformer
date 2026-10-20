@@ -1,6 +1,6 @@
 {
   "name": "Tutorial - Movement",
-  "width": 1600,
+  "width": 2800,
   "height": 900,
   "spawn": {
     "x": 65,
@@ -46,8 +46,8 @@
       "type": "solidPlatform",
       "x": 1360,
       "y": 260,
-      "width": 190,
-      "height": 24
+      "width": 1440,
+      "height": 40
     },
     {
       "type": "spike",
@@ -61,8 +61,8 @@
     {
       "type": "enemy",
       "enemyType": "stationary",
-      "x": 340,
-      "y": 642,
+      "x": 1820,
+      "y": 202,
       "width": 40,
       "height": 58,
       "health": 80,
