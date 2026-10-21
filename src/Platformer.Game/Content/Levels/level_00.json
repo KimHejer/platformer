@@ -73,6 +73,15 @@
       "x": 1490,
       "y": 200,
       "radius": 85
+    },
+    {
+      "type": "levelTransition",
+      "x": 2670,
+      "y": 180,
+      "width": 60,
+      "height": 80,
+      "targetLevel": "level_01.json",
+      "appearance": "door"
     }
   ]
 }

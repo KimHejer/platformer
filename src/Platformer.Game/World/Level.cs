@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Platformer.Game.Checkpoints;
 using Platformer.Game.Entities.Enemies;
 using Platformer.Game.Hazards;
+using Platformer.Game.World.Transitions;
 
 namespace Platformer.Game.World;
 
@@ -17,6 +18,7 @@ public class Level
     public List<Spike> Spikes { get; } = new();
     public List<Enemy> Enemies { get; } = new();
     public List<CheckpointZone> Checkpoints { get; } = new();
+    public List<LevelTransition> LevelTransitions { get; } = new();
 
     public Level(
         string name,

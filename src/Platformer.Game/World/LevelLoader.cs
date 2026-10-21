@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Platformer.Game.Entities.Enemies;
 using Platformer.Game.Hazards;
 using Platformer.Game.Checkpoints;
+using Platformer.Game.World.Transitions;
 
 namespace Platformer.Game.World;
 
@@ -96,6 +97,22 @@ public static class LevelLoader
                         new CheckpointZone(
                             new Vector2(obj.X, obj.Y),
                             obj.Radius
+                        )
+                    );
+                    break;
+
+                case "levelTransition":
+                    if (string.IsNullOrWhiteSpace(obj.TargetLevel))
+                    {
+                        throw new InvalidDataException(
+                            "Level transition must specify a targetlevel."
+                        );
+                    }
+
+                    level.LevelTransitions.Add(
+                        new LevelTransition(
+                            new Rectangle(obj.X, obj.Y, obj.Width, obj.Height),
+                            obj.TargetLevel
                         )
                     );
                     break;

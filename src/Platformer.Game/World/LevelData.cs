@@ -35,4 +35,5 @@ public class LevelObjectData
     public int Damage { get; set; } = 20;
 
     public float Radius { get; set; }
+    public string TargetLevel { get; set; } = "";
 }

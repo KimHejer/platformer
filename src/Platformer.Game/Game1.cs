@@ -12,6 +12,7 @@ using Platformer.Game.Combat.Weapons;
 using Platformer.Game.Combat.Projectiles;
 using Platformer.Game.Entities.Enemies;
 using Platformer.Game.Checkpoints;
+using Platformer.Game.World.Transitions;
 
 namespace Platformer.Game;
 
@@ -153,6 +154,12 @@ public class Game1 : Microsoft.Xna.Framework.Game
             return;
         }
 
+        if (!_player.IsDead && TryLevelTransition())
+        {
+            base.Update(gameTime);
+            return;
+        }
+
         bool shooting = keyboard.IsKeyDown(Keys.Space);
 
         if (_player.Velocity.X > 0f)
@@ -253,6 +260,15 @@ public class Game1 : Microsoft.Xna.Framework.Game
         foreach (CheckpointZone checkpoint in _level.Checkpoints)
         {
             DrawCheckpoint(checkpoint);
+        }
+
+        foreach (LevelTransition transition in _level.LevelTransitions)
+        {
+            _spriteBatch.Draw(
+                _pixel,
+                transition.Bounds,
+                Color.MediumPurple
+            );
         }
 
         foreach (IPlatform platform in _level.Platforms)
@@ -493,5 +509,50 @@ public class Game1 : Microsoft.Xna.Framework.Game
             destination,
             color
         );
+    }
+
+    private void LoadLevel(string filename)
+    {
+        string path = Path.Combine(
+            AppContext.BaseDirectory,
+            "Content",
+            "Levels",
+            filename
+        );
+
+        _level = LevelLoader.Load(path);
+
+        _player.Respawn(_level.SpawnPosition);
+
+        _checkpointManager = new CheckpointManager(_player);
+
+        _projectileManager.Clear();
+        _rifle.Reset();
+
+        _deathTimer = 0f;
+        _facingRight = true;
+
+        _kixAnimator.Play("Idle");
+        
+        _camera.Reset();
+        _camera.Update(
+            _player.Hitbox,
+            _level.Width,
+            _level.Height
+        );
+    }
+
+    private bool TryLevelTransition()
+    {
+        foreach (LevelTransition transition in _level.LevelTransitions)
+        {
+            if (transition.IsTriggered(_player.Hitbox))
+            {
+                LoadLevel(transition.TargetLevel);
+                return true;
+            }
+        }
+
+        return false;
     }
 }
