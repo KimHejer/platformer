@@ -13,6 +13,7 @@ using Platformer.Game.Combat.Projectiles;
 using Platformer.Game.Entities.Enemies;
 using Platformer.Game.Checkpoints;
 using Platformer.Game.World.Transitions;
+using Platformer.Game.Gameplay.Interactables;
 
 namespace Platformer.Game;
 
@@ -160,6 +161,22 @@ public class Game1 : Microsoft.Xna.Framework.Game
             return;
         }
 
+        foreach (JumpRestore restore in _level.JumpRestores)
+        {
+            restore.Update(gameTime);
+
+            if (_player.IsDead || !restore.IsActive)
+                continue;
+            
+            if (restore.Touches(_player.Hitbox))
+            {
+                if (_player.RestoreJump())
+                {
+                    restore.Activate();
+                }
+            }
+        }
+
         bool shooting = keyboard.IsKeyDown(Keys.Space);
 
         if (_player.Velocity.X > 0f)
@@ -281,6 +298,27 @@ public class Game1 : Microsoft.Xna.Framework.Game
                 _pixel,
                 platform.Bounds,
                 color
+            );
+        }
+
+        foreach (JumpRestore restore in _level.JumpRestores)
+        {
+            if (!restore.IsActive)
+                continue;
+            
+            float diameter = restore.Radius * 2f;
+
+            Rectangle bounds = new(
+                (int)(restore.Position.X - restore.Radius),
+                (int)(restore.Position.Y - restore.Radius),
+                (int)diameter,
+                (int)diameter
+            );
+
+            _spriteBatch.Draw(
+                _checkpointTexture,
+                bounds,
+                Color.LimeGreen * 0.7f
             );
         }
 

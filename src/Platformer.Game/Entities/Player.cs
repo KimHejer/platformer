@@ -202,4 +202,14 @@ public class Player
         _wasJumpHeld = snapshot.WasJumpHeld;
         _invulnerabilityTimer = snapshot.InvulnerabilityTimer;
     }
+
+    public bool RestoreJump()
+    {
+        if (_jumpsUsed <= 0)
+            return false;
+
+        _jumpsUsed--;
+
+        return true;
+    }
 }

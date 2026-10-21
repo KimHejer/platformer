@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Platformer.Game.Checkpoints;
 using Platformer.Game.Entities.Enemies;
+using Platformer.Game.Gameplay.Interactables;
 using Platformer.Game.Hazards;
 using Platformer.Game.World.Transitions;
 
@@ -19,6 +20,7 @@ public class Level
     public List<Enemy> Enemies { get; } = new();
     public List<CheckpointZone> Checkpoints { get; } = new();
     public List<LevelTransition> LevelTransitions { get; } = new();
+    public List <JumpRestore> JumpRestores { get; } = new();
 
     public Level(
         string name,

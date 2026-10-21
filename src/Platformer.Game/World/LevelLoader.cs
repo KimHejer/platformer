@@ -4,6 +4,7 @@ using Platformer.Game.Entities.Enemies;
 using Platformer.Game.Hazards;
 using Platformer.Game.Checkpoints;
 using Platformer.Game.World.Transitions;
+using Platformer.Game.Gameplay.Interactables;
 
 namespace Platformer.Game.World;
 
@@ -35,7 +36,7 @@ public static class LevelLoader
 
         foreach (LevelObjectData obj in data.Objects)
         {
-            if (obj.Type == "checkpoint")
+            if (obj.Type is "checkpoint" or "jumpRestore")
             {
                 if (obj.Radius <= 0)
                     throw new InvalidDataException(
@@ -113,6 +114,21 @@ public static class LevelLoader
                         new LevelTransition(
                             new Rectangle(obj.X, obj.Y, obj.Width, obj.Height),
                             obj.TargetLevel
+                        )
+                    );
+                    break;
+                
+                case "jumpRestore":
+                    if (obj.Radius <= 0) {
+                        throw new InvalidDataException(
+                            "JumpRestore radius must be greater than zero."
+                        );
+                    }
+
+                    level.JumpRestores.Add(
+                        new JumpRestore(
+                            new Vector2(obj.X, obj.Y),
+                            obj.Radius
                         )
                     );
                     break;

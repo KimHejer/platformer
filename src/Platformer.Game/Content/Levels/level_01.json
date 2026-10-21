@@ -151,6 +151,12 @@
       "width": 60,
       "height": 80,
       "targetLevel": "level_02.json"
+    },
+    {
+      "type": "jumpRestore",
+      "x": 1050,
+      "y": 420,
+      "radius": 25
     }
   ]
 }
