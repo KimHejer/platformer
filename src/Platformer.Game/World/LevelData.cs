@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-
 namespace Platformer.Game.World;
 
 public class LevelData
@@ -36,4 +33,6 @@ public class LevelObjectData
     public string EnemyType { get; set; } = "";
     public int Health { get; set; } = 100;
     public int Damage { get; set; } = 20;
+
+    public float Radius { get; set; }
 }

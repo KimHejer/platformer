@@ -1,9 +1,8 @@
-using System;
-using System.IO;
 using System.Text.Json;
 using Microsoft.Xna.Framework;
 using Platformer.Game.Entities.Enemies;
 using Platformer.Game.Hazards;
+using Platformer.Game.Checkpoints;
 
 namespace Platformer.Game.World;
 
@@ -35,8 +34,16 @@ public static class LevelLoader
 
         foreach (LevelObjectData obj in data.Objects)
         {
-            if (obj.Width <= 0 || obj.Height <= 0)
-                throw new InvalidDataException($"Invalid dimensions for '{obj.Type}'.");
+            if (obj.Type == "checkpoint")
+            {
+                if (obj.Radius <= 0)
+                    throw new InvalidDataException(
+                        "Checkpoint radius must be greater than zero."
+                    );
+            }
+            else if (obj.Width <= 0 || obj.Height <= 0)
+                throw new InvalidDataException(
+                    $"Invalid dimensions for '{obj.Type}'.");
 
             switch (obj.Type)
             {
@@ -82,6 +89,15 @@ public static class LevelLoader
                                 $"Unknown enemy type: {obj.EnemyType}"
                             );
                     }
+                    break;
+                
+                case "checkpoint":
+                    level.Checkpoints.Add(
+                        new CheckpointZone(
+                            new Vector2(obj.X, obj.Y),
+                            obj.Radius
+                        )
+                    );
                     break;
                 
                 default:

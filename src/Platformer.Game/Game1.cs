@@ -11,6 +11,7 @@ using Platformer.Game.Combat;
 using Platformer.Game.Combat.Weapons;
 using Platformer.Game.Combat.Projectiles;
 using Platformer.Game.Entities.Enemies;
+using Platformer.Game.Checkpoints;
 
 namespace Platformer.Game;
 
@@ -20,15 +21,17 @@ public class Game1 : Microsoft.Xna.Framework.Game
     private SpriteBatch _spriteBatch;
     private Texture2D _pixel;
     private Texture2D _spikeTexture;
+    private Texture2D _checkpointTexture;
 
     private Player _player;
     private Level _level;
     private Camera2D _camera;
 
+    private CheckpointManager _checkpointManager;
+
     private SpriteAnimator _kixAnimator;
     private bool _facingRight = true;
 
-    private Vector2 _respawnPosition = new(100, 100);
     private float RespawnDelay = 0.4f;
     private float _deathTimer = 0f;
 
@@ -59,7 +62,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
         );
 
         _player = new Player(_level.SpawnPosition);
-        _respawnPosition = _level.SpawnPosition;
+        _checkpointManager = new CheckpointManager(_player);
 
         _camera = new Camera2D(
             GraphicsDevice.Viewport.Width,
@@ -78,6 +81,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
         _pixel = new Texture2D(GraphicsDevice, 1, 1);
         _pixel.SetData(new[] { Color.White });
+        _checkpointTexture = CreateCircleTexture(256);
 
         _spikeTexture = CreateSpikeTexture(32, 32);
 
@@ -105,15 +109,22 @@ public class Game1 : Microsoft.Xna.Framework.Game
             return;
         }
 
-        bool restartPressed = keyboard.IsKeyDown(Keys.R) && !_previousKeyboard.IsKeyDown(Keys.R);
+        bool rPressed = keyboard.IsKeyDown(Keys.R) && !_previousKeyboard.IsKeyDown(Keys.R);
 
         _previousKeyboard = keyboard;
 
-        if (restartPressed)
+        if (rPressed)
         {
-            Respawn();
-            base.Update(gameTime);
-            return;
+            if (!_player.IsDead && TrySaveCheckpoint())
+            {
+                // Nothing, only saving checkpoint
+            }
+            else
+            {
+                Respawn();
+                base.Update(gameTime);
+                return;
+            }
         }
 
         float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -239,6 +250,11 @@ public class Game1 : Microsoft.Xna.Framework.Game
             samplerState: SamplerState.PointClamp,
             transformMatrix: _camera.Transform);
 
+        foreach (CheckpointZone checkpoint in _level.Checkpoints)
+        {
+            DrawCheckpoint(checkpoint);
+        }
+
         foreach (IPlatform platform in _level.Platforms)
         {
             Color color = platform.IsOneWay
@@ -345,7 +361,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
     private void Respawn()
     {
-        _player.Respawn(_respawnPosition);
+        _checkpointManager.Restore(_player);
 
         _projectileManager.Clear();
         _rifle.Reset();
@@ -356,6 +372,11 @@ public class Game1 : Microsoft.Xna.Framework.Game
         _kixAnimator.Play("Idle");
 
         _camera.Reset();
+        _camera.Update(
+            _player.Hitbox,
+            _level.Width,
+            _level.Height
+        );
     }
 
     private Texture2D[] LoadFrames(string folder, string prefix)
@@ -402,5 +423,75 @@ public class Game1 : Microsoft.Xna.Framework.Game
         texture.SetData(pixels);
 
         return texture;
+    }
+
+    private bool TrySaveCheckpoint()
+    {
+        if (_player.IsDead)
+            return false;
+        
+        foreach (CheckpointZone zone in _level.Checkpoints)
+        {
+            if (zone.Contains(_player.Hitbox))
+            {
+                _checkpointManager.Save(_player);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private Texture2D CreateCircleTexture(int diameter)
+    {
+        Texture2D texture = new(
+            GraphicsDevice,
+            diameter, 
+            diameter
+        );
+
+        Color[] pixels = new Color[diameter * diameter];
+
+        float radius = diameter / 2f;
+        Vector2 center = new(radius, radius);
+
+        for (int y = 0; y < diameter; y++)
+        {
+            for (int x = 0; x < diameter; x++)
+            {
+                Vector2 point = new(x + 0.5f, y + 0.5f);
+
+                float distance = Vector2.Distance(point, center);
+
+                pixels[y * diameter + x] = 
+                    distance <= radius
+                        ? Color.White
+                        : Color.Transparent;
+            }
+        }
+
+        texture.SetData(pixels);
+
+        return texture;
+    }
+
+    private void DrawCheckpoint(CheckpointZone zone)
+    {
+        float diameter = zone.Radius * 2f;
+
+        Rectangle destination = new(
+            (int)(zone.Center.X - zone.Radius),
+            (int)(zone.Center.Y - zone.Radius),
+            (int)diameter,
+            (int)diameter
+        );
+
+        Color color = Color.Cyan * 0.12f;
+
+        _spriteBatch.Draw(
+            _checkpointTexture,
+            destination,
+            color
+        );
     }
 }

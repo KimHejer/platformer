@@ -43,4 +43,9 @@ public class Health
     {
         Current = Max;
     }
+
+    public void Restore(int amount)
+    {
+        Current = Math.Clamp(amount, 0, Max);
+    }
 }

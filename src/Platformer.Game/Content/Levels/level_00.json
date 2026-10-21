@@ -67,6 +67,12 @@
       "height": 58,
       "health": 80,
       "damage": 20
+    },
+    {
+      "type": "checkpoint",
+      "x": 1490,
+      "y": 200,
+      "radius": 85
     }
   ]
 }

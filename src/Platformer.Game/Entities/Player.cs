@@ -1,9 +1,8 @@
-using System;
-using System.Runtime.CompilerServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using Platformer.Game.Checkpoints;
 
- namespace Platformer.Game.Entities;
+namespace Platformer.Game.Entities;
 
 public class Player
 {
@@ -173,5 +172,34 @@ public class Player
         _jumpsUsed = 1;
         _wasJumpHeld = false;
         _invulnerabilityTimer = 0f;
+    }
+
+    public PlayerSnapshot CaptureState()
+    {
+        return new PlayerSnapshot(
+            Position,
+            Velocity,
+            Health.Current,
+            IsGrounded,
+            WantsToDrop,
+            _jumpsUsed,
+            _wasJumpHeld,
+            _invulnerabilityTimer
+        );
+    }
+
+    public void RestoreState(PlayerSnapshot snapshot)
+    {
+        Position = snapshot.Position;
+        Velocity = snapshot.Velocity;
+
+        Health.Restore(snapshot.CurrentHealth);
+
+        IsGrounded = snapshot.IsGrounded;
+        WantsToDrop = snapshot.WantsToDrop;
+
+        _jumpsUsed = snapshot.JumpsUsed;
+        _wasJumpHeld = snapshot.WasJumpHeld;
+        _invulnerabilityTimer = snapshot.InvulnerabilityTimer;
     }
 }

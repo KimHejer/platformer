@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using Platformer.Game.Checkpoints;
 using Platformer.Game.Entities.Enemies;
 using Platformer.Game.Hazards;
 
@@ -16,6 +16,7 @@ public class Level
     public List<IPlatform> Platforms { get; } = new();
     public List<Spike> Spikes { get; } = new();
     public List<Enemy> Enemies { get; } = new();
+    public List<CheckpointZone> Checkpoints { get; } = new();
 
     public Level(
         string name,
