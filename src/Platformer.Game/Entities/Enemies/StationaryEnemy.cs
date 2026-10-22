@@ -16,13 +16,15 @@ public class StationaryEnemy : Enemy
         int height,
         int maxHealth,
         int contactDamage,
+        string spriteName,
         bool respawnAble
     ) : base(
         position,
         width,
         height,
         maxHealth,
-        contactDamage
+        contactDamage,
+        spriteName
     )
     {
         _spawnPosition = position;

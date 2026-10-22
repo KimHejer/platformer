@@ -13,7 +13,7 @@ public class SpriteAnimator
     private int _currentFrame = 0;
     private float _elapsedTime = 0f;
 
-    public float FramesPerSecond { get; set; } = 10f;
+    public float FramesPerSecond { get; set; } = 24f;
     
     public Texture2D CurrentFrame => _animations[_currentAnimation][_currentFrame];
 

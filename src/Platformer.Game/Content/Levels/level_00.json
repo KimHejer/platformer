@@ -61,10 +61,11 @@
     {
       "type": "enemy",
       "enemyType": "stationary",
+      "sprite": "BearCub",
       "x": 1820,
       "y": 202,
-      "width": 40,
-      "height": 58,
+      "width": 38,
+      "height": 42,
       "health": 80,
       "damage": 20,
       "respawnAble": true

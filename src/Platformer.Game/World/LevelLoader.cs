@@ -91,6 +91,7 @@ public static class LevelLoader
                                     obj.Height,
                                     obj.Health,
                                     obj.Damage,
+                                    obj.Sprite,
                                     obj.RespawnAble
                                 )
                             );

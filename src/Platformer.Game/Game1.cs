@@ -19,28 +19,38 @@ namespace Platformer.Game;
 
 public class Game1 : Microsoft.Xna.Framework.Game
 {
-    private GraphicsDeviceManager _graphics;
-    private SpriteBatch _spriteBatch;
-    private Texture2D _pixel;
-    private Texture2D _spikeTexture;
-    private Texture2D _checkpointTexture;
+    // Graphics
+    private readonly GraphicsDeviceManager _graphics;
+    private SpriteBatch _spriteBatch = null!;
+    private Texture2D _pixel = null!;
+    private Texture2D _spikeTexture = null!;
+    private Texture2D _checkpointTexture = null!;
 
-    private Player _player;
-    private Level _level;
-    private Camera2D _camera;
+    // World
+    private Level _level = null!;
+    private Camera2D _camera = null!;
 
-    private CheckpointManager _checkpointManager;
-
-    private SpriteAnimator _kixAnimator;
+    // Player
+    private Player _player = null!;
+    private CheckpointManager _checkpointManager = null!;
     private bool _facingRight = true;
 
-    private float RespawnDelay = 0.4f;
-    private float _deathTimer = 0f;
+    // Animations
+    private SpriteAnimator _kixAnimator = null!;
 
+    private readonly Dictionary<Enemy, SpriteAnimator> _enemyAnimators = new();
+    private readonly Dictionary<string, Texture2D[]> _animationCache = new();
+
+    // Combat
+    private Rifle _rifle = null!;
+    private ProjectileManager _projectileManager = null!;
+
+    // Death and respawning
+    private const float RespawnDelay = 0.4f;
+    private float _deathTimer;
+
+    // Input
     private KeyboardState _previousKeyboard;
-
-    private Rifle _rifle;
-    private ProjectileManager _projectileManager;
 
     public Game1()
     {
@@ -89,15 +99,18 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
         _kixAnimator = new SpriteAnimator();
 
-        _kixAnimator.AddAnimation("Idle", LoadFrames("Idle", "idle"));
-        _kixAnimator.AddAnimation("Run", LoadFrames("Run", "run"));
-        _kixAnimator.AddAnimation("RunShoot", LoadFrames("Run_Shoot", "run_shoot"));
-        _kixAnimator.AddAnimation("Jump", LoadFrames("Jump", "jump"));
-        _kixAnimator.AddAnimation("Fall", LoadFrames("Fall", "fall"));
-        _kixAnimator.AddAnimation("Land", LoadFrames("Land", "land"));
-        _kixAnimator.AddAnimation("Shoot", LoadFrames("Shoot", "shoot"));
+        _kixAnimator.AddAnimation("Idle", LoadFrames("Kix", "Idle", "idle"));
+        _kixAnimator.AddAnimation("Run", LoadFrames("Kix", "Run", "run"));
+        _kixAnimator.AddAnimation("RunShoot", LoadFrames("Kix", "Run_Shoot", "run_shoot"));
+        _kixAnimator.AddAnimation("Jump", LoadFrames("Kix", "Jump", "jump"));
+        _kixAnimator.AddAnimation("Fall", LoadFrames("Kix", "Fall", "fall"));
+        _kixAnimator.AddAnimation("Land", LoadFrames("Kix", "Land", "land"));
+        _kixAnimator.AddAnimation("Shoot", LoadFrames("Kix", "Shoot", "shoot"));
+        _kixAnimator.AddAnimation("FallShoot", LoadFrames("Kix", "Fall_Shoot", "fall_shoot"));
+        _kixAnimator.AddAnimation("Death", LoadFrames("Kix", "Death", "death"));
 
         _kixAnimator.Play("Idle");
+        InitializeEnemyAnimations();
 
     }
 
@@ -133,6 +146,9 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
         if (_player.IsDead)
         {
+            _kixAnimator.Play("Death");
+            _kixAnimator.Update(gameTime);
+
             _deathTimer += deltaTime;
 
             if (_deathTimer >= RespawnDelay)
@@ -197,7 +213,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
             if (_player.Velocity.Y < 0)
                 _kixAnimator.Play("Jump");
             else
-                _kixAnimator.Play("Fall");
+                _kixAnimator.Play(shooting ? "FallShoot" : "Fall");
         }
         else if (MathF.Abs(_player.Velocity.X) > 0.1f)
         {
@@ -254,10 +270,26 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
         foreach(Enemy enemy in _level.Enemies)
         {
+            SpriteAnimator animator = _enemyAnimators[enemy];
+
+            if (enemy.IsDead) {
+                animator.Play("Death");
+            }
+            else if (enemy.Velocity.Y > 0.1f)
+            {
+                animator.Play("Fall");
+            }
+            else
+            {
+                animator.Play("Idle");
+            }
+
+            animator.Update(gameTime);
             enemy.Update(gameTime);
 
             if (enemy.IsDead)
                 continue;
+
 
             CollisionResolver.Move(
                 enemy,
@@ -369,10 +401,24 @@ public class Game1 : Microsoft.Xna.Framework.Game
             if (enemy.IsDead)
                 continue;
             
+            SpriteAnimator animator = _enemyAnimators[enemy];
+
+            Texture2D enemyFrame = animator.CurrentFrame;
+
+            const int bearSpriteWidth = 48;
+            const int bearSpriteHeight = 48;
+
+            Rectangle enemyDestination = new(
+                enemy.Hitbox.Center.X - bearSpriteWidth / 2,
+                enemy.Hitbox.Bottom - bearSpriteHeight,
+                bearSpriteWidth,
+                bearSpriteHeight
+            );
+
             _spriteBatch.Draw(
-                _pixel,
-                enemy.Hitbox,
-                Color.IndianRed
+                enemyFrame,
+                enemyDestination,
+                Color.White
             );
 
             HealthBarRenderer.Draw(
@@ -479,16 +525,19 @@ public class Game1 : Microsoft.Xna.Framework.Game
         );
     }
 
-    private Texture2D[] LoadFrames(string folder, string prefix)
+    private Texture2D[] LoadFrames(
+        string character, 
+        string folder, 
+        string prefix)
     {
-        Texture2D[] frames = new Texture2D[4];
+        Texture2D[] frames = new Texture2D[12];
 
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < frames.Length; i++)
         {
             string path = Path.Combine(
                 "Content",
                 "Sprites",
-                "Kix",
+                character,
                 folder,
                 $"{prefix}_{i + 1:00}.png"
             );
@@ -606,6 +655,8 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
         _level = LevelLoader.Load(path);
 
+        InitializeEnemyAnimations();
+
         _player.Respawn(_level.SpawnPosition);
 
         _checkpointManager = new CheckpointManager(_player);
@@ -638,5 +689,55 @@ public class Game1 : Microsoft.Xna.Framework.Game
         }
 
         return false;
+    }
+
+    private Texture2D[] GetAnimationFrames(
+        string character,
+        string folder,
+        string prefix
+    )
+    {
+        string key = $"{character}/{folder}";
+
+        if (!_animationCache.TryGetValue(key, out var frames))
+        {
+            frames = LoadFrames(character, folder, prefix);
+            _animationCache.Add(key, frames);
+        }
+        return frames;
+    }
+
+    private void InitializeEnemyAnimations()
+    {
+        _enemyAnimators.Clear();
+
+        foreach (Enemy enemy in _level.Enemies)
+        {
+            if (string.IsNullOrWhiteSpace(enemy.SpriteName))
+                throw new InvalidOperationException(
+                    "enemy must specify a sprite."
+                );
+            
+            SpriteAnimator animator = new();
+
+            animator.AddAnimation(
+                "Idle",
+                GetAnimationFrames(enemy.SpriteName, "Idle", "idle")
+            );
+
+            animator.AddAnimation(
+                "Fall",
+                GetAnimationFrames(enemy.SpriteName, "Fall", "fall")
+            );
+
+            animator.AddAnimation(
+                "Death",
+                GetAnimationFrames(enemy.SpriteName, "Death", "death")
+            );
+
+            animator.Play("Idle");
+
+            _enemyAnimators.Add(enemy, animator);
+        }
     }
 }

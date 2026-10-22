@@ -17,6 +17,8 @@ public abstract class Enemy
 
     public bool IsDead => Health.IsDead;
 
+    public string SpriteName { get; }
+
     public Rectangle Hitbox => new(
         (int)Position.X,
         (int)Position.Y,
@@ -29,7 +31,8 @@ public abstract class Enemy
         int width,
         int height,
         int maxHealth,
-        int contactDamage
+        int contactDamage,
+        string spriteName
     )
     {
         Position = position;
@@ -37,6 +40,7 @@ public abstract class Enemy
         Height = height;
         Health = new Health(maxHealth);
         ContactDamage = contactDamage;
+        SpriteName = spriteName;
     }
 
     public virtual void Update(GameTime gameTime)

@@ -37,4 +37,5 @@ public class LevelObjectData
 
     public float Radius { get; set; }
     public string TargetLevel { get; set; } = "";
+    public string Sprite { get; set; } = "";
 }
