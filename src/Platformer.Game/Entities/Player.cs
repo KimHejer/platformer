@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Platformer.Game.Checkpoints;
+using Platformer.Game.Physics;
 
 namespace Platformer.Game.Entities;
 
@@ -13,7 +14,7 @@ public class Player
     public const int Height = 60;
 
     private const float MoveSpeed = 200f;
-    private const float Gravity = 1200f;
+    private const float GravityAcceleration = Gravity.Acceleration;
     private const float JumpReleaseGravityMultiplier = 2.5f;
     private const float FallGravityMultiplier = 1.5f;
 
@@ -93,10 +94,7 @@ public class Player
 
         _wasJumpHeld = jumpHeld;
 
-        Velocity = new Vector2(
-            Velocity.X, 
-            Velocity.Y + Gravity * gravityMultiplier * deltaTime
-        );
+        Velocity = Gravity.Apply(Velocity, deltaTime, gravityMultiplier);
 
     }
 
@@ -107,7 +105,7 @@ public class Player
             : FirstJumpHeight * SecondJumpHeightRatio;
         
         float jumpSpeed = MathF.Sqrt(
-            2f * Gravity * jumpHeight
+            2f * GravityAcceleration * jumpHeight
             );
         
         Velocity = new Vector2(Velocity.X, -jumpSpeed);

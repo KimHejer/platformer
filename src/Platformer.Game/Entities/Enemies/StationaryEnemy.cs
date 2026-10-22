@@ -1,10 +1,11 @@
-using System.Xml;
 using Microsoft.Xna.Framework;
+using Platformer.Game.Hazards;
 
 namespace Platformer.Game.Entities.Enemies;
 
 public class StationaryEnemy : Enemy
 {
+    public bool RespawnAble { get; }
     private const float RespawnDelay = 0.4f;
 
     private readonly Vector2 _spawnPosition;
@@ -14,7 +15,8 @@ public class StationaryEnemy : Enemy
         int width,
         int height,
         int maxHealth,
-        int contactDamage
+        int contactDamage,
+        bool respawnAble
     ) : base(
         position,
         width,
@@ -25,6 +27,7 @@ public class StationaryEnemy : Enemy
     {
         _spawnPosition = position;
         Velocity = Vector2.Zero;
+        RespawnAble = respawnAble;
     }
 
     public override void Update(GameTime gameTime)
@@ -35,21 +38,50 @@ public class StationaryEnemy : Enemy
             return;
         }
 
+        if (!RespawnAble)
+            return;
+
         float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
         _respawnTimer += dt;
 
         if (_respawnTimer >= RespawnDelay)
         {
-            Respawn();
+            Reset();
         }
     }
 
-    private void Respawn()
+    public override void Reset()
     {
         Position = _spawnPosition;
         Velocity = Vector2.Zero;
 
         Health.Reset();
         _respawnTimer = 0f;
+    }
+
+    public void CheckHazards(
+        IReadOnlyList<Spike> spikes,
+        int levelWidth,
+        int levelHeight
+    )
+    {
+        if (IsDead)
+            return;
+
+        foreach (Spike spike in spikes)
+        {
+            if (spike.Touches(Hitbox))
+            {
+                Kill();
+                return;
+            }
+        }
+
+        if (Hitbox.Top >= levelHeight ||
+            Hitbox.Right <= 0 ||
+            Hitbox.Left >= levelWidth)
+        {
+            Kill();
+        }
     }
 }

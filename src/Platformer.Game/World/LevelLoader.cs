@@ -90,7 +90,8 @@ public static class LevelLoader
                                     obj.Width,
                                     obj.Height,
                                     obj.Health,
-                                    obj.Damage
+                                    obj.Damage,
+                                    obj.RespawnAble
                                 )
                             );
                             break;

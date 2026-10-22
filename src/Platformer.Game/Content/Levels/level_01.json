@@ -108,7 +108,8 @@
       "width": 40,
       "height": 58,
       "health": 60,
-      "damage": 20
+      "damage": 20,
+      "respawnAble": false
     },
     {
       "type": "enemy",
@@ -118,7 +119,8 @@
       "width": 40,
       "height": 58,
       "health": 80,
-      "damage": 20
+      "damage": 20,
+      "respawnAble": false
     },
     {
       "type": "enemy",
@@ -128,7 +130,8 @@
       "width": 40,
       "height": 58,
       "health": 100,
-      "damage": 20
+      "damage": 20,
+      "respawnAble": false
     },
 
     {

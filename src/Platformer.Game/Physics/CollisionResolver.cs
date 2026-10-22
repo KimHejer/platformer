@@ -1,10 +1,8 @@
-using System;
-using System.Collections.Generic;
-
 using Microsoft.Xna.Framework;
 
 using Platformer.Game.Entities;
 using Platformer.Game.World;
+using Platformer.Game.Entities.Enemies;
 
 namespace Platformer.Game.Physics;
 
@@ -127,5 +125,61 @@ public static class CollisionResolver
         player.SetPosition(position);
         player.SetVelocity(velocity);
         player.SetGrounded(grounded);
+    }
+
+    public static void Move(
+        Enemy enemy,
+        IReadOnlyList<IPlatform> platforms,
+        float deltaTime
+    )
+    {
+        if (enemy.IsDead)
+            return;
+        
+        Vector2 position = enemy.Position;
+        Vector2 velocity = enemy.Velocity;
+
+        float moveY = velocity.Y * deltaTime;
+
+        if (moveY > 0f)
+        {
+            foreach (IPlatform platform in platforms)
+            {
+                if (platform is BrittlePlatform brittle && !brittle.IsActive)
+                    continue;
+                
+                Rectangle bounds = platform.Bounds;
+
+                bool horizontalOverlap =
+                    position.X < bounds.Right &&
+                    position.X + enemy.Width > bounds.Left;
+
+                if (!horizontalOverlap)
+                    continue;
+                
+                float enemyBottom = position.Y + enemy.Height;
+
+                if (enemyBottom <= bounds.Top &&
+                    enemyBottom + moveY >= bounds.Top)
+                {
+                    float allowedMoveY = bounds.Top - enemyBottom;
+
+                    if (allowedMoveY <= moveY)
+                    {
+                        moveY = allowedMoveY;
+                    }
+                }
+            }
+        }
+
+        if (moveY != velocity.Y * deltaTime)
+        {
+            velocity.Y = 0f;
+        }
+
+        position.Y += moveY;
+
+        enemy.SetPosition(position);
+        enemy.SetVelocity(velocity);
     }
 }

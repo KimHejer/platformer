@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using Platformer.Game.Physics;
 
 namespace Platformer.Game.Entities.Enemies;
 
@@ -45,7 +46,7 @@ public abstract class Enemy
         
         float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-        Position += Velocity * dt;
+        Velocity = Gravity.Apply(Velocity, dt);
     }
 
     public void TakeDamage(int amount)
@@ -53,4 +54,21 @@ public abstract class Enemy
         if (!IsDead)
             Health.TakeDamage(amount);
     }
+
+    public void SetPosition(Vector2 position)
+    {
+        Position = position;
+    }
+
+    public void SetVelocity(Vector2 velocity)
+    {
+        Velocity = velocity;
+    }
+
+    public virtual void Kill()
+    {
+        Health.Kill();
+    }
+
+    public abstract void Reset();
 }

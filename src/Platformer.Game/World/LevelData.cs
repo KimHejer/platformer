@@ -33,6 +33,7 @@ public class LevelObjectData
     public string EnemyType { get; set; } = "";
     public int Health { get; set; } = 100;
     public int Damage { get; set; } = 20;
+    public bool RespawnAble { get; set; } = false;
 
     public float Radius { get; set; }
     public string TargetLevel { get; set; } = "";

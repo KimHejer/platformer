@@ -258,6 +258,24 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
             if (enemy.IsDead)
                 continue;
+
+            CollisionResolver.Move(
+                enemy,
+                _level.Platforms,
+                deltaTime
+            );
+
+            if (enemy is StationaryEnemy stationary)
+            {
+                stationary.CheckHazards(
+                    _level.Spikes,
+                    _level.Width,
+                    _level.Height
+                );
+            }
+
+            if (enemy.IsDead)
+                continue;
             
             if (enemy.Hitbox.Intersects(_player.Hitbox))
             {
@@ -431,6 +449,11 @@ public class Game1 : Microsoft.Xna.Framework.Game
     private void Respawn()
     {
         _checkpointManager.Restore(_player);
+
+        foreach (Enemy enemy in _level.Enemies)
+        {
+            enemy.Reset();
+        }
 
         foreach(IPlatform platform in _level.Platforms)
         {
