@@ -51,7 +51,7 @@
       "height": 24
     },
     {
-      "type": "softPlatform",
+      "type": "brittlePlatform",
       "x": 2100,
       "y": 550,
       "width": 190,
@@ -157,6 +157,13 @@
       "x": 1050,
       "y": 420,
       "radius": 25
+    },
+    {
+      "type": "brittlePlatform",
+      "x": 1100,
+      "y": 620,
+      "width": 140,
+      "height": 20
     }
   ]
 }

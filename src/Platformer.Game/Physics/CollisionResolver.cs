@@ -26,6 +26,9 @@ public static class CollisionResolver
         {
             if (platform.IsOneWay)
                 continue;
+            
+            if (platform is BrittlePlatform brittle && !brittle.IsActive)
+                continue;
 
             Rectangle bounds = platform.Bounds;
 
@@ -62,10 +65,15 @@ public static class CollisionResolver
         position.X += moveX;
 
         float moveY = velocity.Y * deltaTime;
+        float originalMoveY = moveY;
+        IPlatform? landingPlatform = null;
 
         foreach (IPlatform platform in platforms)
         {
             if (platform.IsOneWay && player.WantsToDrop)
+                continue;
+            
+            if (platform is BrittlePlatform brittle && !brittle.IsActive)
                 continue;
 
             Rectangle bounds = platform.Bounds;
@@ -81,9 +89,15 @@ public static class CollisionResolver
             {
                 float playerBottom = position.Y + Player.Height;
 
-                if (playerBottom <= bounds.Top && playerBottom + moveY >= bounds.Top)
+                if (playerBottom <= bounds.Top && playerBottom + originalMoveY >= bounds.Top)
                 {
-                    moveY = Math.Min(moveY, bounds.Top - playerBottom);
+                    float allowedMoveY = bounds.Top - playerBottom;
+
+                    if (allowedMoveY < moveY)
+                    {
+                        moveY = allowedMoveY;
+                        landingPlatform = platform;
+                    }
                 }
             }
             else if (moveY < 0f && !platform.IsOneWay)
@@ -101,6 +115,11 @@ public static class CollisionResolver
         {
             grounded = velocity.Y > 0;
             velocity.Y = 0;
+
+            if (grounded && landingPlatform is BrittlePlatform brittle)
+            {
+                brittle.StartBreaking();
+            }
         }
 
         position.Y += moveY;

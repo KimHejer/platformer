@@ -177,6 +177,14 @@ public class Game1 : Microsoft.Xna.Framework.Game
             }
         }
 
+        foreach (IPlatform platform in _level.Platforms)
+        {
+            if (platform is BrittlePlatform brittle)
+            {
+                brittle.Update(gameTime);
+            }
+        }
+
         bool shooting = keyboard.IsKeyDown(Keys.Space);
 
         if (_player.Velocity.X > 0f)
@@ -290,9 +298,16 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
         foreach (IPlatform platform in _level.Platforms)
         {
-            Color color = platform.IsOneWay
-                ? Color.LightGreen
-                : Color.DarkGray;
+            if (platform is BrittlePlatform brittle && !brittle.IsActive)
+                continue;
+
+            Color color = platform switch
+            {
+                BrittlePlatform { IsBreaking: true } => Color.OrangeRed,
+                BrittlePlatform => Color.Orange,
+                SoftPlatform => Color.LightBlue,
+                _ => Color.Gray
+            };
 
             _spriteBatch.Draw(
                 _pixel,
@@ -416,6 +431,14 @@ public class Game1 : Microsoft.Xna.Framework.Game
     private void Respawn()
     {
         _checkpointManager.Restore(_player);
+
+        foreach(IPlatform platform in _level.Platforms)
+        {
+            if (platform is BrittlePlatform brittle)
+            {
+                brittle.ReActivate();
+            }
+        }
 
         _projectileManager.Clear();
         _rifle.Reset();

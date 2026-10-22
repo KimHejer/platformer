@@ -67,6 +67,15 @@ public static class LevelLoader
                     );
                     break;
 
+                case "brittlePlatform":
+                    level.Platforms.Add(
+                        new BrittlePlatform(
+                            obj.X, obj.Y,
+                            obj.Width, obj.Height
+                        )
+                    );
+                    break;
+
                 case "spike":
                     AddSpikes(level, obj);
                     break;
