@@ -9,6 +9,8 @@ public class LevelData
     public PositionData Spawn { get; set; } = new();
 
     public List<LevelObjectData> Objects { get; set; } = new();
+
+    public string? TileMap { get; set; }
 }
 
 public class PositionData

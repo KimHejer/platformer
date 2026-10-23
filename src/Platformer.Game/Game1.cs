@@ -14,6 +14,7 @@ using Platformer.Game.Entities.Enemies;
 using Platformer.Game.Checkpoints;
 using Platformer.Game.World.Transitions;
 using Platformer.Game.Gameplay.Interactables;
+using Platformer.Game.World.Tiled;
 
 namespace Platformer.Game;
 
@@ -29,6 +30,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
     // World
     private Level _level = null!;
     private Camera2D _camera = null!;
+    private TiledMapRenderer? _tiledRenderer;
 
     // Player
     private Player _player = null!;
@@ -55,8 +57,8 @@ public class Game1 : Microsoft.Xna.Framework.Game
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
-        _graphics.PreferredBackBufferWidth = 1600;
-        _graphics.PreferredBackBufferHeight = 900;
+        _graphics.PreferredBackBufferWidth = 2400;
+        _graphics.PreferredBackBufferHeight = 1200;
 
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
@@ -111,6 +113,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
         _kixAnimator.Play("Idle");
         InitializeEnemyAnimations();
+        LoadTiledRenderer();
 
     }
 
@@ -331,14 +334,22 @@ public class Game1 : Microsoft.Xna.Framework.Game
         _spriteBatch.Begin(
             samplerState: SamplerState.PointClamp,
             transformMatrix: _camera.Transform);
+        
+        _tiledRenderer?.Draw(_spriteBatch, foreground: false);
 
         foreach (CheckpointZone checkpoint in _level.Checkpoints)
         {
+            if (_level.TiledCheckpoints.Contains(checkpoint))
+                continue;
+
             DrawCheckpoint(checkpoint);
         }
 
         foreach (LevelTransition transition in _level.LevelTransitions)
         {
+            if (_level.TiledTransitions.Contains(transition))
+                continue;
+
             _spriteBatch.Draw(
                 _pixel,
                 transition.Bounds,
@@ -349,6 +360,9 @@ public class Game1 : Microsoft.Xna.Framework.Game
         foreach (IPlatform platform in _level.Platforms)
         {
             if (platform is BrittlePlatform brittle && !brittle.IsActive)
+                continue;
+
+            if (_level.TiledPlatforms.Contains(platform))
                 continue;
 
             Color color = platform switch
@@ -368,7 +382,8 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
         foreach (JumpRestore restore in _level.JumpRestores)
         {
-            if (!restore.IsActive)
+            if (!restore.IsActive ||
+                _level.TiledJumpRestores.Contains(restore))
                 continue;
             
             float diameter = restore.Radius * 2f;
@@ -387,13 +402,23 @@ public class Game1 : Microsoft.Xna.Framework.Game
             );
         }
 
-        foreach(Spike spike in _level.Spikes)
+        foreach (Spike spike in _level.Spikes)
         {
-            float left = MathF.Min( spike.Shape.A.X, MathF.Min(spike.Shape.B.X, spike.Shape.C.X));
+            if (_level.TiledSpikes.Contains(spike))
+                continue;
 
-            float top = MathF.Min(spike.Shape.A.Y, MathF.Min(spike.Shape.B.Y, spike.Shape.C.Y));
+            float left = MathF.Min(
+                spike.Shape.A.X,
+                MathF.Min(spike.Shape.B.X, spike.Shape.C.X));
 
-            _spriteBatch.Draw(_spikeTexture, new Rectangle((int)left, (int)top, 32, 32), Color.White);
+            float top = MathF.Min(
+                spike.Shape.A.Y,
+                MathF.Min(spike.Shape.B.Y, spike.Shape.C.Y));
+
+            _spriteBatch.Draw(
+                _spikeTexture,
+                new Rectangle((int)left, (int)top, 32, 32),
+                Color.White);
         }
 
         foreach (Enemy enemy in _level.Enemies)
@@ -470,11 +495,11 @@ public class Game1 : Microsoft.Xna.Framework.Game
         );
 
         // Only for testing, shows the player hitbox
-        _spriteBatch.Draw(
-            _pixel,
-            _player.Hitbox,
-            Color.Red * 0.35f
-        );
+        // _spriteBatch.Draw(
+        //     _pixel,
+        //     _player.Hitbox,
+        //     Color.Red * 0.35f
+        // );
 
         if (!_player.IsDead)
         {
@@ -486,6 +511,8 @@ public class Game1 : Microsoft.Xna.Framework.Game
                 _player.Health.Max
             );
         }
+
+        _tiledRenderer?.Draw(_spriteBatch, foreground: true);
 
         _spriteBatch.End();
 
@@ -655,6 +682,8 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
         _level = LevelLoader.Load(path);
 
+        LoadTiledRenderer();
+
         InitializeEnemyAnimations();
 
         _player.Respawn(_level.SpawnPosition);
@@ -739,5 +768,31 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
             _enemyAnimators.Add(enemy, animator);
         }
+    }
+
+    private void LoadTiledRenderer()
+    {
+        _tiledRenderer?.Dispose();
+        _tiledRenderer = null;
+
+        if (string.IsNullOrWhiteSpace(_level.TileMapPath))
+            return;
+
+        TiledMapData map = TiledMapData.Load(
+            _level.TileMapPath);
+
+        _tiledRenderer = new TiledMapRenderer(
+            GraphicsDevice,
+            map,
+            _level
+        );
+    }
+
+    protected override void UnloadContent()
+    {
+        _tiledRenderer?.Dispose();
+        _tiledRenderer = null;
+
+        base.UnloadContent();
     }
 }

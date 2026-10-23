@@ -22,6 +22,21 @@ public class Level
     public List<LevelTransition> LevelTransitions { get; } = new();
     public List <JumpRestore> JumpRestores { get; } = new();
 
+    public string? TileMapPath { get; set; }
+    public HashSet<IPlatform> TiledPlatforms { get; } = new();
+    public HashSet<Spike> TiledSpikes { get; } = new();
+    public Dictionary<BrittlePlatform, List<(int Layer, int Index)>> 
+        TiledBrittleTiles { get; } = new();
+
+    public HashSet<JumpRestore> TiledJumpRestores { get; } = new();
+
+    public HashSet<CheckpointZone> TiledCheckpoints { get; } = new();
+
+    public HashSet<LevelTransition> TiledTransitions { get; } = new();
+
+    public Dictionary<(int Layer, int Index), JumpRestore>
+        TiledRestoreTiles { get; } = new();
+
     public Level(
         string name,
         int width,

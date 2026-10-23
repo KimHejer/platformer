@@ -5,6 +5,7 @@ using Platformer.Game.Hazards;
 using Platformer.Game.Checkpoints;
 using Platformer.Game.World.Transitions;
 using Platformer.Game.Gameplay.Interactables;
+using Platformer.Game.World.Tiled;
 
 namespace Platformer.Game.World;
 
@@ -33,6 +34,27 @@ public static class LevelLoader
             data.Height,
             new Vector2(data.Spawn.X, data.Spawn.Y)
         );
+
+        if (!string.IsNullOrWhiteSpace(data.TileMap))
+        {
+            string mapPath = Path.GetFullPath(Path.Combine(
+                Path.GetDirectoryName(path)!,
+                "..",
+                "Maps",
+                data.TileMap
+            ));
+
+            if (!File.Exists(mapPath))
+                throw new FileNotFoundException(
+                    "Tiled map not found.", mapPath);
+
+            TiledMapData map = TiledMapData.Load(mapPath);
+
+            level.TileMapPath = mapPath;
+
+            TiledCollisionBuilder.AddToLevel(map, level);
+            TiledGameplayBuilder.AddToLevel(map, level);
+        }
 
         foreach (LevelObjectData obj in data.Objects)
         {
