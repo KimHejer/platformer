@@ -181,11 +181,6 @@ public static class LevelLoader
         LevelObjectData obj
     )
     {
-        if (obj.Direction != "up")
-            throw new NotSupportedException(
-                $"Unsupported spike direction: {obj.Direction}"
-            );
-        
         if (obj.Count < 1)
             throw new InvalidDataException(
                 "Spike count must be at least 1."
@@ -196,13 +191,58 @@ public static class LevelLoader
             int x = obj.X + i * obj.Width;
             int y = obj.Y;
 
-            level.Spikes.Add(
-                new Spike(
-                    new Vector2(x, y + obj.Height),
-                    new Vector2(x + obj.Width / 2f, y),
-                    new Vector2(x + obj.Width, y + obj.Height)
-                )
-            );
+            switch (obj.Direction)
+            {
+                case "up":
+                    level.Spikes.Add(
+                        new Spike(
+                            new Vector2(x, y + obj.Height),
+                            new Vector2(x + obj.Width / 2f, y),
+                            new Vector2(x + obj.Width, y + obj.Height)
+                        )
+                    );
+                    break;
+                
+                case "down":
+                    level.Spikes.Add(
+                        new Spike(
+                            new Vector2(x + obj.Width / 2, y + obj.Height),
+                            new Vector2(x, y),
+                            new Vector2(x + obj.Width, y)
+                        )
+                    );
+                    break;
+
+                case "right":
+                    level.Spikes.Add(
+                        new Spike(
+                            new Vector2(x, y),
+                            new Vector2(x, y + obj.Height),
+                            new Vector2(x + obj.Width, y + obj.Height / 2)
+                        )
+                    );
+                    break;
+
+                case "left":
+                    level.Spikes.Add(
+                        new Spike(
+                            new Vector2(x + obj.Width, y),
+                            new Vector2(x, y + obj.Height / 2),
+                            new Vector2(x + obj.Width, y + obj.Height)
+                        )
+                    );
+                    break;
+                
+                default:
+                    level.Spikes.Add(
+                        new Spike(
+                            new Vector2(x, y + obj.Height),
+                            new Vector2(x + obj.Width / 2f, y),
+                            new Vector2(x + obj.Width, y + obj.Height)
+                        )
+                    );
+                    break;
+            }
         }
     }
 }

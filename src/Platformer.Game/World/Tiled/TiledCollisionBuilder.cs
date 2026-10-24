@@ -15,6 +15,7 @@ public static class TiledCollisionBuilder
 
         // The collision type occupying each map cell.
         string?[,] types = new string?[height, width];
+        string?[,] directions = new string?[height, width];
 
         // Tracks which visual tile represents the collision cell.
         (int Layer, int Index)?[,] sources =
@@ -53,6 +54,22 @@ public static class TiledCollisionBuilder
 
                     types[y, x] = type;
                     sources[y, x] = (layerIndex, index);
+
+                    if (type == "spike")
+                    {
+                        string direction = map.SpikeDirections.TryGetValue(
+                            gid, out string? tileDirection)
+                            ? tileDirection
+                            : "up";
+
+                        if (direction is not ("up" or "down" or "left" or "right"))
+                        {
+                            throw new InvalidDataException(
+                                $"Invalid spike direction '{direction}' at ({x}, {y}).");
+                        }
+
+                        directions[y, x] = direction;
+                    }
                 }
             }
         }
@@ -68,38 +85,80 @@ public static class TiledCollisionBuilder
                 if (type == null || visited[y, x])
                     continue;
 
+                string? direction = directions[y, x];
+
                 int runWidth = 0;
-
-                while (x + runWidth < width &&
-                       !visited[y, x + runWidth] &&
-                       types[y, x + runWidth] == type)
-                {
-                    runWidth++;
-                }
-
                 int runHeight = 1;
 
-                // Solid and spike areas can merge vertically.
-                if (type is "solid" or "spike")
+                if (type == "spike")
                 {
-                    while (y + runHeight < height)
-                    {
-                        bool valid = true;
+                    // Default: a single 1x1 spike.
+                    runWidth = 1;
 
-                        for (int dx = 0; dx < runWidth; dx++)
+                    // Only merge when all four tiles form a complete 2x2
+                    // square, have spike collision, and share a direction.
+                    if (x + 1 < width && y + 1 < height)
+                    {
+                        bool canMerge = true;
+
+                        for (int dy = 0; dy < 2; dy++)
                         {
-                            if (visited[y + runHeight, x + dx] ||
-                                types[y + runHeight, x + dx] != type)
+                            for (int dx = 0; dx < 2; dx++)
                             {
-                                valid = false;
-                                break;
+                                int tx = x + dx;
+                                int ty = y + dy;
+
+                                if (visited[ty, tx] ||
+                                    types[ty, tx] != "spike" ||
+                                    directions[ty, tx] != direction)
+                                {
+                                    canMerge = false;
+                                    break;
+                                }
                             }
+
+                            if (!canMerge)
+                                break;
                         }
 
-                        if (!valid)
-                            break;
+                        if (canMerge)
+                        {
+                            runWidth = 2;
+                            runHeight = 2;
+                        }
+                    }
+                }
+                else
+                {
+                    // Keep the existing merging behavior for platforms.
+                    while (x + runWidth < width &&
+                        !visited[y, x + runWidth] &&
+                        types[y, x + runWidth] == type)
+                    {
+                        runWidth++;
+                    }
 
-                        runHeight++;
+                    if (type == "solid")
+                    {
+                        while (y + runHeight < height)
+                        {
+                            bool valid = true;
+
+                            for (int dx = 0; dx < runWidth; dx++)
+                            {
+                                if (visited[y + runHeight, x + dx] ||
+                                    types[y + runHeight, x + dx] != type)
+                                {
+                                    valid = false;
+                                    break;
+                                }
+                            }
+
+                            if (!valid)
+                                break;
+
+                            runHeight++;
+                        }
                     }
                 }
 
@@ -163,13 +222,32 @@ public static class TiledCollisionBuilder
 
                     case "spike":
                     {
-                        // One upward triangle spanning the
-                        // complete merged rectangle.
-                        var spike = new Spike(
-                            new Vector2(px, py + ph),
-                            new Vector2(px + pw / 2f, py),
-                            new Vector2(px + pw, py + ph)
-                        );
+                        Spike spike = direction switch
+                        {
+                            "down" => new Spike(
+                                new Vector2(px + pw / 2f, py + ph),
+                                new Vector2(px, py),
+                                new Vector2(px + pw, py)
+                            ),
+
+                            "left" => new Spike(
+                                new Vector2(px + pw, py),
+                                new Vector2(px, py + ph / 2f),
+                                new Vector2(px + pw, py + ph)
+                            ),
+
+                            "right" => new Spike(
+                                new Vector2(px, py),
+                                new Vector2(px, py + ph),
+                                new Vector2(px + pw, py + ph / 2f)
+                            ),
+
+                            _ => new Spike(
+                                new Vector2(px, py + ph),
+                                new Vector2(px + pw / 2f, py),
+                                new Vector2(px + pw, py + ph)
+                            )
+                        };
 
                         level.Spikes.Add(spike);
                         level.TiledSpikes.Add(spike);

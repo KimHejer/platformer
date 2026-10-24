@@ -26,4 +26,14 @@
    <property name="levelTransition" value=""/>
   </properties>
  </tile>
+ <tile id="32">
+  <properties>
+   <property name="stationary" value="BearCub"/>
+  </properties>
+ </tile>
+ <tile id="33">
+  <properties>
+   <property name="bear" value="Bear"/>
+  </properties>
+ </tile>
 </tileset>

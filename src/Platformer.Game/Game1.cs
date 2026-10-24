@@ -71,7 +71,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
                 AppContext.BaseDirectory,
                 "Content",
                 "Levels",
-                "level_00.json"
+                "level_01.json"
             )
         );
 
@@ -494,12 +494,12 @@ public class Game1 : Microsoft.Xna.Framework.Game
             0f
         );
 
-        // Only for testing, shows the player hitbox
-        // _spriteBatch.Draw(
-        //     _pixel,
-        //     _player.Hitbox,
-        //     Color.Red * 0.35f
-        // );
+        //Only for testing, shows the player hitbox
+        _spriteBatch.Draw(
+            _pixel,
+            _player.Hitbox,
+            Color.Red * 0.35f
+        );
 
         if (!_player.IsDead)
         {

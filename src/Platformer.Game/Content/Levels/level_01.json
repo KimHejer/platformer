@@ -1,7 +1,7 @@
 {
   "name": "Level 01 - First Steps",
   "tileMap": "TestMap.tmx",
-  "width": 12000,
+  "width": 36000,
   "height": 2000,
   "spawn": {
     "x": 80,

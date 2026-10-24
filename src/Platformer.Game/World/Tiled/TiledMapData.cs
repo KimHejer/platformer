@@ -39,6 +39,7 @@ public sealed class TiledMapData
     public List<TileLayer> Layers { get; } = new();
 
     public Dictionary<uint, string> CollisionTypes { get; } = new();
+    public Dictionary<uint, string> SpikeDirections { get; } = new();
 
     public Dictionary<uint, string> ObjectTypes { get; } = new();
     public Dictionary<uint, string> ObjectTargets { get; } = new();
@@ -188,6 +189,26 @@ public sealed class TiledMapData
                 }
 
                 result.CollisionTypes[firstGid + localId] = type;
+                if (type == "spike")
+                {
+                    string direction = (
+                        ReadTileProperty("spike") ??
+                        ReadTileProperty("direction") ??
+                        "up"
+                    ).Trim().ToLowerInvariant();
+
+                    if (string.IsNullOrWhiteSpace(direction))
+                        direction = "up";
+
+                    if (direction is not ("up" or "down" or "left" or "right"))
+                    {
+                        throw new InvalidDataException(
+                            $"Invalid spike direction '{direction}' " +
+                            $"in {source}, tile {localId}.");
+                    }
+
+                    result.SpikeDirections[firstGid + localId] = direction;
+                }
             }
         }
 
