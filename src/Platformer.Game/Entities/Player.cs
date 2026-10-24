@@ -13,7 +13,7 @@ public class Player
     public const int Width = 35;
     public const int Height = 60;
 
-    private const float MoveSpeed = 200f;
+    private const float MoveSpeed = 300f;
     private const float GravityAcceleration = Gravity.Acceleration;
     private const float JumpReleaseGravityMultiplier = 2.5f;
     private const float FallGravityMultiplier = 1.5f;
