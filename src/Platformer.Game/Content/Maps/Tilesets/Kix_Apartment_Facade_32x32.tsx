@@ -3,7 +3,7 @@
  <image source="Kix_Apartment_Facade_32x32.png" width="1536" height="1024"/>
  <tile id="1369">
   <properties>
-   <property name="levelTransition" value="boss1"/>
+   <property name="levelTransition" value="boss_01.json"/>
   </properties>
  </tile>
 </tileset>

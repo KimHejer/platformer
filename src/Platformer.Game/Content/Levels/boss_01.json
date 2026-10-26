@@ -1,0 +1,21 @@
+{
+  "name": "Level 01 - Pinkie",
+  "tileMap": "Dajwor6.tmx",
+  "width": 3200,
+  "height": 2000,
+  "spawn": {
+    "x": 80,
+    "y": 100
+  },
+  "objects": [
+  {
+    "type": "floatingPlatform",
+    "x": 1200,
+    "y": 900,
+    "width": 160,
+    "height": 16,
+    "velocityX": -140,
+    "velocityY": 0
+  }
+  ]
+}

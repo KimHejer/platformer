@@ -23,7 +23,7 @@
  </tile>
  <tile id="29">
   <properties>
-   <property name="levelTransition" value=""/>
+   <property name="levelTransition" value="level_01.json"/>
   </properties>
  </tile>
  <tile id="32">

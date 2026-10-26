@@ -54,17 +54,12 @@ public static class TiledGameplayBuilder
 
                     case "levelTransition":
                     {
-                        string? target = map.ObjectTargets.GetValueOrDefault(gid);
-
-                        if (string.IsNullOrWhiteSpace(target))
-                            target = layer.TargetLevel;
-
-                        if (string.IsNullOrWhiteSpace(target))
+                        if (!map.ObjectTargets.TryGetValue(gid, out string? target) ||
+                            string.IsNullOrWhiteSpace(target))
                         {
                             throw new InvalidDataException(
                                 $"Level transition at ({x}, {y}) " +
-                                $"in layer '{layer.Name}' needs a " +
-                                "targetLevel string property on its tile or layer.");
+                                $"in layer '{layer.Name}' has no destination. {gid}");
                         }
 
                         const int portalWidth = 96;

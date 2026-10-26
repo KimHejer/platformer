@@ -27,7 +27,6 @@ public sealed class TiledMapData
         public required bool Foreground { get; init; }
         public required bool Visible { get; init; }
         public required float Opacity { get; init; }
-        public required string? TargetLevel { get; init; }
     }
 
     public int Width { get; private init; }
@@ -146,10 +145,15 @@ public sealed class TiledMapData
 
                     result.ObjectTypes[firstGid + localId] = objectType;
 
-                    string? target = ReadTileProperty("targetLevel");
+                    if (objectType == "levelTransition")
+                    {
+                        string? target = ReadTileProperty("levelTransition");
 
-                    if (!string.IsNullOrWhiteSpace(target))
-                        result.ObjectTargets[firstGid + localId] = target.Trim();
+                        if (!string.IsNullOrWhiteSpace(target))
+                        {
+                            result.ObjectTargets[firstGid + localId] = target.Trim();
+                        }
+                    }
                 }
 
                 XElement? property = tile
@@ -262,10 +266,6 @@ public sealed class TiledMapData
                 Width = width,
                 Height = height,
                 Collision = HasProperty("collision"),
-                TargetLevel = props?.Elements("property")
-                    .Where(p => (string?)p.Attribute("name") == "targetLevel")
-                    .Select(p => (string?)p.Attribute("value") ?? p.Value)
-                    .FirstOrDefault(),
                 Foreground = HasProperty("foreground") ||
                     name.Equals(
                         "Foreground",

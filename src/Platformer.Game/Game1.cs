@@ -162,6 +162,14 @@ public class Game1 : Microsoft.Xna.Framework.Game
             base.Update(gameTime);
             return;
         }
+
+        foreach (IPlatform platform in _level.Platforms)
+        {
+            if (platform is FloatingPlatform floating)
+            {
+                floating.Update(gameTime);
+            }
+        }
             
         _player.Update(gameTime, keyboard);
 
@@ -533,6 +541,11 @@ public class Game1 : Microsoft.Xna.Framework.Game
             if (platform is BrittlePlatform brittle)
             {
                 brittle.ReActivate();
+            }
+
+            if (platform is FloatingPlatform floating)
+            {
+                floating.Reset();
             }
         }
 

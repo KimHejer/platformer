@@ -97,6 +97,21 @@ public static class LevelLoader
                         )
                     );
                     break;
+                
+                case "floatingPlatform":
+                    level.Platforms.Add(
+                        new FloatingPlatform(
+                            obj.X,
+                            obj.Y,
+                            obj.Width,
+                            obj.Height,
+                            new Vector2(
+                                obj.VelocityX,
+                                obj.VelocityY
+                            )
+                        )
+                    );
+                    break;
 
                 case "spike":
                     AddSpikes(level, obj);

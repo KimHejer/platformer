@@ -40,4 +40,6 @@ public class LevelObjectData
     public float Radius { get; set; }
     public string TargetLevel { get; set; } = "";
     public string Sprite { get; set; } = "";
+    public float VelocityX { get; set; }
+    public float VelocityY { get; set; }
 }

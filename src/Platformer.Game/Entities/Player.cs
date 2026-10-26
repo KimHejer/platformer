@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Platformer.Game.Checkpoints;
 using Platformer.Game.Physics;
+using Platformer.Game.World;
 
 namespace Platformer.Game.Entities;
 
@@ -26,6 +27,7 @@ public class Player
 
     public bool WantsToDrop { get; private set; }
     public bool IsGrounded { get; private set; }
+    public IPlatform? StandingPlatform { get; private set; }
 
     public Health Health { get; } = new Health(100);
     public bool IsDead => Health.IsDead;
@@ -112,6 +114,7 @@ public class Player
 
         _jumpsUsed++;
         IsGrounded = false;
+        StandingPlatform = null;
     }
 
     public void SetPosition(Vector2 position)
@@ -166,6 +169,7 @@ public class Player
 
         IsGrounded = false;
         WantsToDrop = false;
+        StandingPlatform = null;
 
         _jumpsUsed = 1;
         _wasJumpHeld = false;
@@ -195,6 +199,7 @@ public class Player
 
         IsGrounded = snapshot.IsGrounded;
         WantsToDrop = snapshot.WantsToDrop;
+        StandingPlatform = null;
 
         _jumpsUsed = snapshot.JumpsUsed;
         _wasJumpHeld = snapshot.WasJumpHeld;
@@ -209,5 +214,10 @@ public class Player
         _jumpsUsed--;
 
         return true;
+    }
+
+    public void SetStandingPlatform(IPlatform? platform)
+    {
+        StandingPlatform = platform;
     }
 }

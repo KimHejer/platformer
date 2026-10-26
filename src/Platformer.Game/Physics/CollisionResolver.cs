@@ -16,115 +16,181 @@ public static class CollisionResolver
         Vector2 position = player.Position;
         Vector2 velocity = player.Velocity;
 
-        bool grounded = false;
+        IPlatform? previousSupport = player.StandingPlatform;
 
-        float moveX = velocity.X * deltaTime;
+        Vector2 carry = GetPlatformMovement(player);
+
+        // Detach when the player jumps or drops through.
+        if (player.WantsToDrop || velocity.Y < 0f)
+        {
+            previousSupport = null;
+            carry = Vector2.Zero;
+        }
+
+        // Include platform displacement in horizontal movement.
+        float requestedMoveX = velocity.X * deltaTime + carry.X;
+        float moveX = requestedMoveX;
 
         foreach (IPlatform platform in platforms)
         {
             if (platform.IsOneWay)
                 continue;
-            
+
             if (platform is BrittlePlatform brittle && !brittle.IsActive)
                 continue;
 
             Rectangle bounds = platform.Bounds;
 
-            bool verticalOverlap = 
+            bool verticalOverlap =
                 position.Y < bounds.Bottom &&
                 position.Y + Player.Height > bounds.Top;
 
             if (!verticalOverlap)
                 continue;
 
-            if (moveX > 0)
+            if (moveX > 0f)
             {
                 float playerRight = position.X + Player.Width;
 
-                if (playerRight <= bounds.Left && playerRight + moveX >= bounds.Left)
+                if (playerRight <= bounds.Left &&
+                    playerRight + moveX >= bounds.Left)
                 {
-                    moveX = Math.Min(moveX, bounds.Left - playerRight);
+                    moveX = Math.Min(
+                        moveX,
+                        bounds.Left - playerRight
+                    );
                 }
             }
             else if (moveX < 0f)
             {
                 float playerLeft = position.X;
 
-                if (playerLeft >= bounds.Right && playerLeft + moveX <= bounds.Right)
+                if (playerLeft >= bounds.Right &&
+                    playerLeft + moveX <= bounds.Right)
                 {
-                    moveX = Math.Max(moveX, bounds.Right - playerLeft);
+                    moveX = Math.Max(
+                        moveX,
+                        bounds.Right - playerLeft
+                    );
                 }
             }
         }
 
-        if (moveX != velocity.X * deltaTime)
-            velocity.X = 0;
+        if (moveX != requestedMoveX)
+            velocity.X = 0f;
 
         position.X += moveX;
 
-        float moveY = velocity.Y * deltaTime;
-        float originalMoveY = moveY;
+        float requestedMoveY = velocity.Y * deltaTime + carry.Y;
+        float moveY = requestedMoveY;
+
         IPlatform? landingPlatform = null;
+        bool grounded = false;
 
         foreach (IPlatform platform in platforms)
         {
             if (platform.IsOneWay && player.WantsToDrop)
                 continue;
-            
+
             if (platform is BrittlePlatform brittle && !brittle.IsActive)
                 continue;
 
             Rectangle bounds = platform.Bounds;
 
-            bool horizontalOverlap = 
+            bool horizontalOverlap =
                 position.X < bounds.Right &&
                 position.X + Player.Width > bounds.Left;
 
             if (!horizontalOverlap)
                 continue;
-            
-            if (moveY > 0)
-            {
-                float playerBottom = position.Y + Player.Height;
 
-                if (playerBottom <= bounds.Top && playerBottom + originalMoveY >= bounds.Top)
+            float playerBottom = position.Y + Player.Height;
+
+            if (platform == previousSupport &&
+                velocity.Y >= 0f)
+            {
+                float previousPlatformTop = bounds.Top;
+
+                if (platform is FloatingPlatform moving)
+                    previousPlatformTop -= moving.Delta.Y;
+
+                bool wasStanding =
+                    MathF.Abs(playerBottom - previousPlatformTop) <= 2f;
+
+                if (wasStanding)
                 {
                     float allowedMoveY = bounds.Top - playerBottom;
 
-                    if (allowedMoveY < moveY)
+                    if (allowedMoveY <= moveY)
                     {
                         moveY = allowedMoveY;
                         landingPlatform = platform;
+                        grounded = true;
                     }
                 }
             }
-            else if (moveY < 0f && !platform.IsOneWay)
+
+            if (velocity.Y >= 0f)
+            {
+                float previousTop = bounds.Top;
+
+                if (platform is FloatingPlatform moving)
+                    previousTop -= moving.Delta.Y;
+
+                float relativeMoveY =
+                    velocity.Y * deltaTime +
+                    previousTop - bounds.Top;
+
+                bool crossedTop =
+                    playerBottom <= previousTop + 0.01f &&
+                    playerBottom + relativeMoveY >= previousTop;
+
+                if (crossedTop)
+                {
+                    float allowedMoveY =
+                        bounds.Top - playerBottom;
+
+                    if (allowedMoveY <= moveY)
+                    {
+                        moveY = allowedMoveY;
+                        landingPlatform = platform;
+                        grounded = true;
+                    }
+                }
+            }
+            else if (!platform.IsOneWay)
             {
                 float playerTop = position.Y;
 
-                if (playerTop >= bounds.Bottom && playerTop + moveY <= bounds.Bottom)
+                if (playerTop >= bounds.Bottom &&
+                    playerTop + moveY <= bounds.Bottom)
                 {
-                    moveY = Math.Max(moveY, bounds.Bottom - playerTop);
+                    moveY = Math.Max(
+                        moveY,
+                        bounds.Bottom - playerTop
+                    );
+
+                    velocity.Y = 0f;
                 }
-            }
-        }
-
-        if (moveY != velocity.Y * deltaTime)
-        {
-            grounded = velocity.Y > 0;
-            velocity.Y = 0;
-
-            if (grounded && landingPlatform is BrittlePlatform brittle)
-            {
-                brittle.StartBreaking();
             }
         }
 
         position.Y += moveY;
 
+        if (grounded)
+        {
+            velocity.Y = 0f;
+
+            if (landingPlatform is BrittlePlatform brittle)
+                brittle.StartBreaking();
+        }
+
         player.SetPosition(position);
         player.SetVelocity(velocity);
         player.SetGrounded(grounded);
+        player.SetStandingPlatform(
+            grounded ? landingPlatform : null
+        );
     }
 
     public static void Move(
@@ -181,5 +247,19 @@ public static class CollisionResolver
 
         enemy.SetPosition(position);
         enemy.SetVelocity(velocity);
+    }
+
+    private static Vector2 GetPlatformMovement(Player player)
+    {
+        if (player.StandingPlatform is not FloatingPlatform moving)
+            return Vector2.Zero;
+        
+        if (!player.IsGrounded || player.WantsToDrop)
+            return Vector2.Zero;
+        
+        if (player.Velocity.Y <0f)
+            return Vector2.Zero;
+        
+        return moving.Delta;
     }
 }
