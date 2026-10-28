@@ -1,0 +1,21 @@
+
+{
+  "id": "pinkie_normal",
+  "loop": true,
+  "duration": 12.0,
+  "events": [
+    { "time": 0.0, "platformId": "medical_book", "x": 1950, "y": 1020, "velocityX": -300, "velocityY": 0 },
+    { "time": 1.2, "platformId": "medical_book", "x": 1950, "y": 760, "velocityX": -300, "velocityY": 0 },
+    { "time": 1.8, "platformId": "medical_book", "x": 1950, "y": 720, "velocityX": -300, "velocityY": 0 },
+    { "time": 2.4, "platformId": "medical_book", "x": 1950, "y": 440, "velocityX": -280, "velocityY": 0 },
+    { "time": 3.6, "platformId": "medical_book", "x": 1950, "y": 620, "velocityX": -320, "velocityY": 0 },
+    { "time": 4.8, "platformId": "medical_book", "x": 1950, "y": 1080, "velocityX": -300, "velocityY": 0 },
+    { "time": 5.4, "platformId": "medical_book", "x": 1950, "y": 540, "velocityX": -300, "velocityY": 0 },
+    { "time": 6.0, "platformId": "medical_book", "x": 1950, "y": 800, "velocityX": -280, "velocityY": 0 },
+    { "time": 7.2, "platformId": "medical_book", "x": 1950, "y": 300, "velocityX": -320, "velocityY": 0 },
+    { "time": 8.4, "platformId": "medical_book", "x": 1950, "y": 560, "velocityX": -300, "velocityY": 0 },
+    { "time": 9.0, "platformId": "medical_book", "x": 1950, "y": 760, "velocityX": -300, "velocityY": 0 },
+    { "time": 9.6, "platformId": "medical_book", "x": 1950, "y": 940, "velocityX": -280, "velocityY": 0 },
+    { "time": 10.8, "platformId": "medical_book", "x": 1950, "y": 680, "velocityX": -320, "velocityY": 0 }
+  ]
+}

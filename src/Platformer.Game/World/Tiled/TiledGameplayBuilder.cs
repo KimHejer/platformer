@@ -4,6 +4,7 @@ using Platformer.Game.Checkpoints;
 using Platformer.Game.Gameplay.Interactables;
 using Platformer.Game.World.Transitions;
 using Platformer.Game.World.Platforms;
+using Platformer.Game.World.Platforms.Movement;
 
 namespace Platformer.Game.World.Tiled;
 
@@ -115,10 +116,12 @@ public static class TiledGameplayBuilder
             if (!string.IsNullOrWhiteSpace(platformId))
             {
                 // Rectangle object referencing a reusable definition.
+                Vector2 position = new(obj.X, obj.Y);
+
                 instance = factory.Create(
                     platformId,
-                    new Vector2(obj.X, obj.Y),
-                    velocity
+                    position,
+                    CreateMovement(obj, map, position)
                 );
             }
             else
@@ -164,11 +167,96 @@ public static class TiledGameplayBuilder
                 instance = factory.Create(
                     definition,
                     position,
-                    velocity
+                    CreateMovement(obj, map, position)
                 );
             }
 
             level.AddPlatform(instance);
+        }
+    }
+
+    private static IPlatformMovement CreateMovement(
+        TiledMapData.MapObject obj,
+        TiledMapData map,
+        Vector2 startPosition)
+    {
+        string mode = obj.GetString("movementMode", "linear")
+            .Trim()
+            .ToLowerInvariant();
+
+        float speed = obj.GetFloat("speed", 100f);
+
+        switch (mode)
+        {
+            case "linear":
+                return new LinearMovement(new Vector2(
+                    obj.GetFloat("velocityX"),
+                    obj.GetFloat("velocityY")
+                ));
+
+            case "pingpong":
+            {
+                Vector2 end = startPosition + new Vector2(
+                    obj.GetFloat("offsetX", 200f),
+                    obj.GetFloat("offsetY", 0f)
+                );
+
+                return new PingPongMovement(
+                    startPosition,
+                    end,
+                    speed
+                );
+            }
+
+            case "path":
+            {
+                string pathId = obj.GetString("pathId");
+
+                TiledMapData.MapObject path = map.Objects
+                    .SingleOrDefault(candidate =>
+                        candidate.Type == "PlatformPath" &&
+                        candidate.Name == pathId)
+                    ?? throw new InvalidDataException(
+                        $"Platform path '{pathId}' was not found.");
+
+                if (path.Polyline.Count < 2)
+                    throw new InvalidDataException(
+                        $"Platform path '{pathId}' needs two or more points.");
+
+                var points = path.Polyline
+                    .Select(p => new Vector2(path.X, path.Y) + p)
+                    .ToList();
+
+                // A platform's initial position is the first path point.
+                if (Vector2.DistanceSquared(
+                    points[0], startPosition) > 0.01f)
+                {
+                    throw new InvalidDataException(
+                        $"Platform '{obj.Name}' must start at the " +
+                        $"first point of path '{pathId}'.");
+                }
+
+                string pathMode = obj.GetString("pathMode", "pingPong");
+
+                if (!Enum.TryParse(
+                    pathMode,
+                    true,
+                    out PathMode parsedMode))
+                {
+                    throw new InvalidDataException(
+                        $"Unknown path mode '{pathMode}'.");
+                }
+
+                return new PathMovement(
+                    points,
+                    speed,
+                    parsedMode
+                );
+            }
+
+            default:
+                throw new InvalidDataException(
+                    $"Unknown movement mode '{mode}'.");
         }
     }
 }

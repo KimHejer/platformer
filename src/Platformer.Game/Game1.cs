@@ -15,6 +15,7 @@ using Platformer.Game.Checkpoints;
 using Platformer.Game.World.Transitions;
 using Platformer.Game.Gameplay.Interactables;
 using Platformer.Game.World.Tiled;
+using Platformer.Game.World.Platforms.Spawning;
 
 namespace Platformer.Game;
 
@@ -32,6 +33,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
     private Camera2D _camera = null!;
     private TiledMapRenderer? _tiledRenderer;
     private PlatformRenderer? _platformRenderer;
+    private PlatformSpawner? _bossPlatformSpawner;
 
     // Player
     private Player _player = null!;
@@ -114,6 +116,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
         _kixAnimator.Play("Idle");
         InitializeEnemyAnimations();
+        InitializePlatformSpawner();
         LoadWorldRenderers();
 
     }
@@ -164,13 +167,9 @@ public class Game1 : Microsoft.Xna.Framework.Game
             return;
         }
 
-        foreach (IPlatform platform in _level.Platforms)
-        {
-            if (platform is FloatingPlatform floating)
-            {
-                floating.Update(gameTime);
-            }
-        }
+        _bossPlatformSpawner?.Update(gameTime, _player);
+
+        _level.UpdateMovingPlatforms(gameTime);
             
         _player.Update(gameTime, keyboard);
 
@@ -555,12 +554,9 @@ public class Game1 : Microsoft.Xna.Framework.Game
             {
                 brittle.ReActivate();
             }
-
-            if (platform is FloatingPlatform floating)
-            {
-                floating.Reset();
-            }
         }
+        _bossPlatformSpawner?.Reset(_player);
+        _level.ResetMovingPlatforms();
 
         _projectileManager.Clear();
         _rifle.Reset();
@@ -708,6 +704,8 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
         _level = LevelLoader.Load(path);
 
+        InitializePlatformSpawner();
+
         LoadWorldRenderers();
 
         InitializeEnemyAnimations();
@@ -848,5 +846,43 @@ public class Game1 : Microsoft.Xna.Framework.Game
         _tiledRenderer = null;
 
         base.UnloadContent();
+    }
+
+    private void InitializePlatformSpawner()
+    {
+        _bossPlatformSpawner = null;
+
+        if (string.IsNullOrWhiteSpace(_level.PlatformSpawnPattern))
+            return;
+
+        if (_level.PlatformFactory is null)
+            throw new InvalidOperationException(
+                "Platform factory was not initialized.");
+
+        string patternName = _level.PlatformSpawnPattern!;
+
+        if (Path.GetFileNameWithoutExtension(patternName) != patternName ||
+            patternName is "." or "..")
+        {
+            throw new InvalidDataException(
+                $"Invalid platform spawn pattern: {patternName}");
+        }
+
+        string patternPath = Path.Combine(
+            AppContext.BaseDirectory,
+            "Content",
+            "Platforms",
+            "Patterns",
+            patternName + ".json"
+        );
+
+        PlatformSpawnPattern pattern =
+            PlatformSpawnPatternLoader.Load(patternPath);
+
+        _bossPlatformSpawner = new PlatformSpawner(
+            _level.PlatformFactory,
+            _level,
+            pattern
+        );
     }
 }

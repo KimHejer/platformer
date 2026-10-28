@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 
 namespace Platformer.Game.World.Platforms;
+using Platformer.Game.World.Platforms.Movement;
 
 public sealed class PlatformFactory
 {
@@ -49,12 +50,55 @@ public sealed class PlatformFactory
                 $"Invalid dimensions for platform '{definition.Id}'.");
         }
 
+        return Create(
+            definition,
+            position,
+            new LinearMovement(velocity)
+        );
+    }
+
+    public PlatformInstance Create(
+        string definitionId,
+        Vector2 position,
+        IPlatformMovement movement)
+    {
+        if (!_definitions.TryGetValue(
+            definitionId,
+            out PlatformDefinition? definition))
+        {
+            throw new InvalidDataException(
+                $"Unknown platform definition '{definitionId}'.");
+        }
+
+        return Create(definition, position, movement);
+    }
+
+    public PlatformInstance Create(
+        PlatformDefinition definition,
+        Vector2 position,
+        IPlatformMovement movement)
+    {
+        Rectangle collision = definition.CollisionBounds;
+
+        if (definition.Size.X <= 0 ||
+            definition.Size.Y <= 0 ||
+            collision.Width <= 0 ||
+            collision.Height <= 0 ||
+            collision.X < 0 ||
+            collision.Y < 0 ||
+            collision.Right > definition.Size.X ||
+            collision.Bottom > definition.Size.Y)
+        {
+            throw new InvalidDataException(
+                $"Invalid platform definition '{definition.Id}'.");
+        }
+
         var platform = new FloatingPlatform(
             (int)MathF.Round(position.X),
             (int)MathF.Round(position.Y),
             collision.Width,
             collision.Height,
-            new Movement.LinearMovement(velocity),
+            movement,
             new Point(collision.X, collision.Y)
         );
 

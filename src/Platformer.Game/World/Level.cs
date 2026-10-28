@@ -5,6 +5,7 @@ using Platformer.Game.Gameplay.Interactables;
 using Platformer.Game.Hazards;
 using Platformer.Game.World.Transitions;
 using Platformer.Game.World.Platforms;
+using Platformer.Game.Entities;
 
 namespace Platformer.Game.World;
 
@@ -39,6 +40,8 @@ public class Level
         TiledRestoreTiles { get; } = new();
 
     public List<PlatformInstance> PlatformInstances { get; } = new();
+    public PlatformFactory? PlatformFactory { get; set; }
+    public string? PlatformSpawnPattern { get; set; }
 
     public Level(
         string name,
@@ -59,13 +62,36 @@ public class Level
         Platforms.Add(instance.Platform);
     }
 
-    public bool RemovePlatform(PlatformInstance instance)
+    public bool RemovePlatform(
+        PlatformInstance instance,
+        Player? player = null)
     {
-        bool removed = PlatformInstances.Remove(instance);
+        if (!PlatformInstances.Remove(instance))
+            return false;
 
-        if (removed)
-            Platforms.Remove(instance.Platform);
+        if (player?.StandingPlatform == instance.Platform)
+            player.SetStandingPlatform(null);
 
-        return removed;
+        Platforms.Remove(instance.Platform);
+
+        return true;
+    }
+
+    public void UpdateMovingPlatforms(GameTime gameTime)
+    {
+        foreach (IPlatform platform in Platforms)
+        {
+            if (platform is FloatingPlatform floating)
+                floating.Update(gameTime);
+        }
+    }
+
+    public void ResetMovingPlatforms()
+    {
+        foreach (IPlatform platform in Platforms)
+        {
+            if (platform is FloatingPlatform floating)
+                floating.Reset();
+        }
     }
 }

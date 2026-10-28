@@ -19,7 +19,11 @@ public class FloatingPlatform : SoftPlatform
         int height,
         IPlatformMovement movement,
         Point collisionOffset = default
-    ) : base(x, y, width, height)
+    ) : base(
+        x + collisionOffset.X, 
+        y + collisionOffset.Y, 
+        width, 
+        height)
     {
         _collisionOffset = collisionOffset;
         _startPosition = new Vector2(x, y);
@@ -73,8 +77,8 @@ public class FloatingPlatform : SoftPlatform
         Delta = Vector2.Zero;
 
         Bounds = new Rectangle(
-            (int)MathF.Round(Position.X),
-            (int)MathF.Round(Position.Y),
+            (int)MathF.Round(Position.X) + _collisionOffset.X,
+            (int)MathF.Round(Position.Y) + _collisionOffset.Y,
             Bounds.Width,
             Bounds.Height
         );

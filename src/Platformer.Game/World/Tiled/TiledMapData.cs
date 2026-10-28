@@ -45,6 +45,9 @@ public sealed class TiledMapData
 
         public Dictionary<string, string> Properties { get; init; } = new();
 
+        public List<Microsoft.Xna.Framework.Vector2> Polyline { get; init; } 
+            = new();
+
         public string GetString(string name, string fallback = "")
         {
             return Properties.TryGetValue(name, out string? value)
@@ -344,6 +347,8 @@ public sealed class TiledMapData
 
                     Gid = (uint?)obj.Attribute("gid") ?? 0u,
 
+                    Polyline = ParsePolyline(obj),
+
                     Properties = properties
                 });
             }
@@ -361,5 +366,35 @@ public sealed class TiledMapData
             .FirstOrDefault()
             ?? throw new InvalidDataException(
                 $"No tileset contains GID {gid}.");
+    }
+
+    private static List<Microsoft.Xna.Framework.Vector2> ParsePolyline(
+        XElement obj)
+    {
+        string? points = (string?)obj.Element("polyline")?.Attribute("points");
+
+        if (string.IsNullOrWhiteSpace(points))
+            return new();
+
+        return points
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Select(point =>
+            {
+                string[] coordinates = point.Split(',');
+
+                if (coordinates.Length != 2)
+                    throw new InvalidDataException(
+                        $"Invalid polyline point '{point}'.");
+
+                return new Microsoft.Xna.Framework.Vector2(
+                    float.Parse(
+                        coordinates[0],
+                        CultureInfo.InvariantCulture),
+                    float.Parse(
+                        coordinates[1],
+                        CultureInfo.InvariantCulture)
+                );
+            })
+            .ToList();
     }
 }

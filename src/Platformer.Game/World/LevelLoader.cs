@@ -36,6 +36,8 @@ public static class LevelLoader
             new Vector2(data.Spawn.X, data.Spawn.Y)
         );
 
+        level.PlatformSpawnPattern = data.PlatformSpawnPattern;
+
         string contentDirectory = Path.GetFullPath(
             Path.Combine(Path.GetDirectoryName(path)!, "..")
         );
@@ -51,6 +53,7 @@ public static class LevelLoader
             : new Dictionary<string, PlatformDefinition>();
 
         var platformFactory = new PlatformFactory(definitions);
+        level.PlatformFactory = platformFactory;
 
         if (!string.IsNullOrWhiteSpace(data.TileMap))
         {

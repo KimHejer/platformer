@@ -11,6 +11,8 @@ public class LevelData
     public List<LevelObjectData> Objects { get; set; } = new();
 
     public string? TileMap { get; set; }
+
+    public string? PlatformSpawnPattern { get; set; }
 }
 
 public class PositionData
