@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Platformer.Game.World;
 using Platformer.Game.World.Tiled;
+using Platformer.Game.World.Platforms;
 
 namespace Platformer.Game.Graphics;
 
@@ -16,6 +17,7 @@ public sealed class TiledMapRenderer : IDisposable
         (int Layer, int Index),
         Platformer.Game.Gameplay.Interactables.JumpRestore
     > _restoreOwners;
+
 
     public TiledMapRenderer(
         GraphicsDevice graphicsDevice,
@@ -147,6 +149,7 @@ public sealed class TiledMapRenderer : IDisposable
         }
     }
 
+    public IReadOnlyDictionary<uint, Texture2D> TilesetTextures => _textures;
     public void Dispose()
     {
         foreach (Texture2D texture in _textures.Values)

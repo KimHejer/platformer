@@ -6,6 +6,7 @@ using Platformer.Game.Checkpoints;
 using Platformer.Game.World.Transitions;
 using Platformer.Game.Gameplay.Interactables;
 using Platformer.Game.World.Tiled;
+using Platformer.Game.World.Platforms;
 
 namespace Platformer.Game.World;
 
@@ -35,6 +36,22 @@ public static class LevelLoader
             new Vector2(data.Spawn.X, data.Spawn.Y)
         );
 
+        string contentDirectory = Path.GetFullPath(
+            Path.Combine(Path.GetDirectoryName(path)!, "..")
+        );
+
+        string catalogPath = Path.Combine(
+            contentDirectory,
+            "Platforms",
+            "platforms.json"
+        );
+
+        var definitions = File.Exists(catalogPath)
+            ? PlatformDefinitionLoader.Load(catalogPath)
+            : new Dictionary<string, PlatformDefinition>();
+
+        var platformFactory = new PlatformFactory(definitions);
+
         if (!string.IsNullOrWhiteSpace(data.TileMap))
         {
             string mapPath = Path.GetFullPath(Path.Combine(
@@ -53,7 +70,11 @@ public static class LevelLoader
             level.TileMapPath = mapPath;
 
             TiledCollisionBuilder.AddToLevel(map, level);
-            TiledGameplayBuilder.AddToLevel(map, level);
+            TiledGameplayBuilder.AddToLevel(
+                map,
+                level,
+                platformFactory
+            );
         }
 
         foreach (LevelObjectData obj in data.Objects)

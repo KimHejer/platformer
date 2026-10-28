@@ -4,6 +4,7 @@ using Platformer.Game.Entities.Enemies;
 using Platformer.Game.Gameplay.Interactables;
 using Platformer.Game.Hazards;
 using Platformer.Game.World.Transitions;
+using Platformer.Game.World.Platforms;
 
 namespace Platformer.Game.World;
 
@@ -37,6 +38,8 @@ public class Level
     public Dictionary<(int Layer, int Index), JumpRestore>
         TiledRestoreTiles { get; } = new();
 
+    public List<PlatformInstance> PlatformInstances { get; } = new();
+
     public Level(
         string name,
         int width,
@@ -48,5 +51,21 @@ public class Level
         Width = width;
         Height = height;
         SpawnPosition = spawnPosition;
+    }
+
+    public void AddPlatform(PlatformInstance instance)
+    {
+        PlatformInstances.Add(instance);
+        Platforms.Add(instance.Platform);
+    }
+
+    public bool RemovePlatform(PlatformInstance instance)
+    {
+        bool removed = PlatformInstances.Remove(instance);
+
+        if (removed)
+            Platforms.Remove(instance.Platform);
+
+        return removed;
     }
 }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="60" height="32" tilewidth="32" tileheight="32" infinite="0" nextlayerid="6" nextobjectid="1">
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="60" height="32" tilewidth="32" tileheight="32" infinite="0" nextlayerid="7" nextobjectid="19">
  <tileset firstgid="1" source="Tilesets/Kix_Tiled_32x32.tsx"/>
  <tileset firstgid="55" source="Tilesets/Kix_Apartment_Facade_32x32.tsx"/>
  <tileset firstgid="1591" source="Tilesets/Dajwor6_Apartment_32x32.tsx"/>
@@ -114,6 +114,15 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
+ <objectgroup id="6" name="GamePlay">
+  <object id="17" type="MovingPlatform" x="1712" y="832" width="148" height="24">
+   <properties>
+    <property name="platformId" value="medical_book"/>
+    <property name="velocityX" value="-100"/>
+    <property name="velocityY" value="0"/>
+   </properties>
+  </object>
+ </objectgroup>
  <layer id="5" name="Foreground" width="60" height="32">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

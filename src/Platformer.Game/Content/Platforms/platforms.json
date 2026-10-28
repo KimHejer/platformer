@@ -1,0 +1,14 @@
+{
+  "platforms": [
+    {
+      "id": "medical_book",
+      "texture": "Platforms/medical_book.png",
+      "width": 160,
+      "height": 32,
+      "collisionX": 0,
+      "collisionY": 0,
+      "collisionWidth": 160,
+      "collisionHeight": 16
+    }
+  ]
+}

@@ -29,6 +29,36 @@ public sealed class TiledMapData
         public required float Opacity { get; init; }
     }
 
+    public sealed class MapObject
+    {
+        public required int Id { get; init; }
+        public required string LayerName { get; init; }
+        public required string Name { get; init; }
+        public required string Type { get; init; }
+
+        public required float X { get; init; }
+        public required float Y { get; init; }
+        public required float Width { get; init; }
+        public required float Height { get; init; }
+
+        public uint Gid { get; init; }
+
+        public Dictionary<string, string> Properties { get; init; } = new();
+
+        public string GetString(string name, string fallback = "")
+        {
+            return Properties.TryGetValue(name, out string? value)
+                ? value
+                : fallback;
+        }
+
+        public float GetFloat(string name, float fallback = 0f)
+        {
+            return Properties.TryGetValue(name, out string? value)
+                ? float.Parse(value, CultureInfo.InvariantCulture)
+                : fallback;
+        }
+    }
     public int Width { get; private init; }
     public int Height { get; private init; }
     public int TileWidth { get; private init; }
@@ -36,6 +66,7 @@ public sealed class TiledMapData
 
     public List<Tileset> Tilesets { get; } = new();
     public List<TileLayer> Layers { get; } = new();
+    public List<MapObject> Objects { get; } = new();
 
     public Dictionary<uint, string> CollisionTypes { get; } = new();
     public Dictionary<uint, string> SpikeDirections { get; } = new();
@@ -275,6 +306,47 @@ public sealed class TiledMapData
                     (string?)layer.Attribute("opacity") ?? "1",
                     CultureInfo.InvariantCulture)
             });
+        }
+
+        foreach (XElement group in map.Elements("objectgroup"))
+        {
+            foreach (XElement obj in group.Elements("object"))
+            {
+                var properties = new Dictionary<string, string>();
+
+                foreach (XElement property in
+                        obj.Element("properties")?.Elements("property")
+                        ?? Enumerable.Empty<XElement>())
+                {
+                    string name = (string?)property.Attribute("name") ?? "";
+
+                    string value =
+                        (string?)property.Attribute("value")
+                        ?? property.Value;
+
+                    properties[name] = value;
+                }
+
+                result.Objects.Add(new MapObject
+                {
+                    Id = (int?)obj.Attribute("id") ?? 0,
+                    Name = (string?)obj.Attribute("name") ?? "",
+                    LayerName = (string?)group.Attribute("name") ?? "",
+                    Type =
+                        (string?)obj.Attribute("class") is { Length: > 0 } className
+                            ? className
+                            : (string?)obj.Attribute("type") ?? "",
+
+                    X = (float?)obj.Attribute("x") ?? 0f,
+                    Y = (float?)obj.Attribute("y") ?? 0f,
+                    Width = (float?)obj.Attribute("width") ?? 0f,
+                    Height = (float?)obj.Attribute("height") ?? 0f,
+
+                    Gid = (uint?)obj.Attribute("gid") ?? 0u,
+
+                    Properties = properties
+                });
+            }
         }
 
         return result;

@@ -31,6 +31,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
     private Level _level = null!;
     private Camera2D _camera = null!;
     private TiledMapRenderer? _tiledRenderer;
+    private PlatformRenderer? _platformRenderer;
 
     // Player
     private Player _player = null!;
@@ -113,7 +114,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
         _kixAnimator.Play("Idle");
         InitializeEnemyAnimations();
-        LoadTiledRenderer();
+        LoadWorldRenderers();
 
     }
 
@@ -373,6 +374,13 @@ public class Game1 : Microsoft.Xna.Framework.Game
             if (_level.TiledPlatforms.Contains(platform))
                 continue;
 
+            if (platform is FloatingPlatform floating &&
+                _level.PlatformInstances.Any(
+                    instance => ReferenceEquals(instance.Platform, floating)))
+            {
+                continue;
+            }
+
             Color color = platform switch
             {
                 BrittlePlatform { IsBreaking: true } => Color.OrangeRed,
@@ -387,6 +395,11 @@ public class Game1 : Microsoft.Xna.Framework.Game
                 color
             );
         }
+
+        _platformRenderer?.Draw(
+            _spriteBatch,
+            _level.PlatformInstances
+        );     
 
         foreach (JumpRestore restore in _level.JumpRestores)
         {
@@ -695,7 +708,7 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
         _level = LevelLoader.Load(path);
 
-        LoadTiledRenderer();
+        LoadWorldRenderers();
 
         InitializeEnemyAnimations();
 
@@ -783,26 +796,54 @@ public class Game1 : Microsoft.Xna.Framework.Game
         }
     }
 
-    private void LoadTiledRenderer()
+    private void LoadWorldRenderers()
     {
+        _platformRenderer?.Dispose();
+        _platformRenderer = null;
+
         _tiledRenderer?.Dispose();
         _tiledRenderer = null;
 
+        string contentDirectory = Path.GetFullPath(
+            Path.Combine(
+                AppContext.BaseDirectory,
+                "Content"
+            )
+        );
+
         if (string.IsNullOrWhiteSpace(_level.TileMapPath))
+        {
+            _platformRenderer = new PlatformRenderer(
+                GraphicsDevice,
+                contentDirectory
+            );
+
             return;
+        }
 
         TiledMapData map = TiledMapData.Load(
-            _level.TileMapPath);
+            _level.TileMapPath
+        );
 
         _tiledRenderer = new TiledMapRenderer(
             GraphicsDevice,
             map,
             _level
         );
+
+        _platformRenderer = new PlatformRenderer(
+            GraphicsDevice,
+            contentDirectory,
+            map,
+            _tiledRenderer.TilesetTextures
+        );
     }
 
     protected override void UnloadContent()
     {
+        _platformRenderer?.Dispose();
+        _platformRenderer = null;
+
         _tiledRenderer?.Dispose();
         _tiledRenderer = null;
 
