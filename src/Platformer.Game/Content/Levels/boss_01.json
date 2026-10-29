@@ -1,10 +1,23 @@
+
 {
   "name": "Level 01 - Pinkie",
   "tileMap": "Dajwor6.tmx",
   "platformSpawnPattern": "pinkie_normal",
   "width": 3200,
   "height": 2000,
+  "pinkie": {
+    "x": 2100,
+    "y": 400,
+    "platformWidth": 192,
+    "platformHeight": 24,
+    "travelY": 450,
+    "speed": 100,
+    "width": 120,
+    "height": 120,
+    "health": 1000
+  },
   "spawn": {
+
     "x": 80,
     "y": 100
   },

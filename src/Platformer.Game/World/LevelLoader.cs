@@ -7,6 +7,8 @@ using Platformer.Game.World.Transitions;
 using Platformer.Game.Gameplay.Interactables;
 using Platformer.Game.World.Tiled;
 using Platformer.Game.World.Platforms;
+using Platformer.Game.Entities.Enemies.Bosses;
+using Platformer.Game.World.Platforms.Movement;
 
 namespace Platformer.Game.World;
 
@@ -210,6 +212,52 @@ public static class LevelLoader
                         $"Unknown level object type: {obj.Type}."
                     );
             }
+
+        }
+
+        if (data.Pinkie is { } boss)
+        {
+            if (boss.PlatformWidth <= 0 ||
+                boss.PlatformHeight <= 0 ||
+                boss.Width <= 0 ||
+                boss.Height <= 0 ||
+                boss.Health <= 0 ||
+                boss.Speed <= 0 ||
+                !float.IsFinite(boss.Speed) ||
+                !float.IsFinite(boss.TravelY) ||
+                boss.TravelY == 0f)
+            {
+                throw new InvalidDataException(
+                    "Invalid Pinkie boss configuration."
+                );
+            }
+
+            Vector2 start = new(boss.X, boss.Y);
+            Vector2 end = start + new Vector2(
+                0f,
+                boss.TravelY
+            );
+
+            var platform = new FloatingPlatform(
+                boss.X,
+                boss.Y,
+                boss.PlatformWidth,
+                boss.PlatformHeight,
+                new PingPongMovement(
+                    start,
+                    end,
+                    boss.Speed
+                )
+            );
+
+            level.Platforms.Add(platform);
+
+            level.Enemies.Add(new Pinkie(
+                platform,
+                boss.Width,
+                boss.Height,
+                boss.Health
+            ));
         }
 
         return level;

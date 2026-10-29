@@ -16,6 +16,7 @@ using Platformer.Game.World.Transitions;
 using Platformer.Game.Gameplay.Interactables;
 using Platformer.Game.World.Tiled;
 using Platformer.Game.World.Platforms.Spawning;
+using Platformer.Game.Entities.Enemies.Bosses;
 
 namespace Platformer.Game;
 
@@ -279,8 +280,22 @@ public class Game1 : Microsoft.Xna.Framework.Game
             _level.Spikes, 
             _level.Enemies);
 
-        foreach(Enemy enemy in _level.Enemies)
+
+        foreach (Enemy enemy in _level.Enemies)
         {
+            if (enemy is Pinkie pinkie)
+            {
+                pinkie.Update(gameTime);
+
+                if (!pinkie.IsDead &&
+                    pinkie.Hitbox.Intersects(_player.Hitbox))
+                {
+                    _player.Kill();
+                }
+
+                continue;
+            }
+
             SpriteAnimator animator = _enemyAnimators[enemy];
 
             if (enemy.IsDead) {
@@ -445,6 +460,25 @@ public class Game1 : Microsoft.Xna.Framework.Game
         {
             if (enemy.IsDead)
                 continue;
+
+            if (enemy is Pinkie pinkie)
+            {
+                _spriteBatch.Draw(
+                    _pixel,
+                    pinkie.Hitbox,
+                    Color.SaddleBrown
+                );
+
+                HealthBarRenderer.Draw(
+                    _spriteBatch,
+                    _pixel,
+                    pinkie.Hitbox,
+                    pinkie.Health.Current,
+                    pinkie.Health.Max
+                );
+
+                continue;
+            }
             
             SpriteAnimator animator = _enemyAnimators[enemy];
 
@@ -539,26 +573,29 @@ public class Game1 : Microsoft.Xna.Framework.Game
         base.Draw(gameTime);
     }
 
+
     private void Respawn()
     {
         _checkpointManager.Restore(_player);
 
-        foreach (Enemy enemy in _level.Enemies)
-        {
-            enemy.Reset();
-        }
-
-        foreach(IPlatform platform in _level.Platforms)
+        foreach (IPlatform platform in _level.Platforms)
         {
             if (platform is BrittlePlatform brittle)
             {
                 brittle.ReActivate();
             }
         }
+
         _bossPlatformSpawner?.Reset(_player);
         _level.ResetMovingPlatforms();
 
+        foreach (Enemy enemy in _level.Enemies)
+        {
+            enemy.Reset();
+        }
+
         _projectileManager.Clear();
+
         _rifle.Reset();
 
         _deathTimer = 0f;
@@ -766,6 +803,9 @@ public class Game1 : Microsoft.Xna.Framework.Game
 
         foreach (Enemy enemy in _level.Enemies)
         {
+            if (enemy is Pinkie)
+                continue;
+
             if (string.IsNullOrWhiteSpace(enemy.SpriteName))
                 throw new InvalidOperationException(
                     "enemy must specify a sprite."

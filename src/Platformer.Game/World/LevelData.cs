@@ -13,6 +13,23 @@ public class LevelData
     public string? TileMap { get; set; }
 
     public string? PlatformSpawnPattern { get; set; }
+    public PinkieBossData? Pinkie { get; set; }
+}
+
+public sealed class PinkieBossData
+{
+    public int X { get; set; }
+    public int Y { get; set; }
+
+    public int PlatformWidth { get; set; } = 192;
+    public int PlatformHeight { get; set; } = 24;
+
+    public float TravelY { get; set; } = 450f;
+    public float Speed { get; set; } = 100f;
+
+    public int Width { get; set; } = 120;
+    public int Height { get; set; } = 120;
+    public int Health { get; set; } = 1000;
 }
 
 public class PositionData
